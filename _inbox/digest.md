@@ -3,6 +3,7 @@
 # The nightly-generate routine processes unprocessed blocks (those not starting with <!--PROCESSED).
 # DO NOT delete processed blocks — they are your audit trail.
 
+<!--PROCESSED 2026-06-15T00:00:00Z -->
 ## Mutex Locks · 2026-06-15 · deck:CS::OSTEP::ch28-locks · src:OSTEP-ch28
 
 [def:1] A mutex lock is a synchronization primitive that grants exclusive access to a critical section.
