@@ -81,7 +81,7 @@ Write back:
 ## Step 5 — Commit + push
 
 ```
-git -C "D:\recall_agent\recall_agent" add cards/ state/
+git -C "D:\recall_agent\recall_agent" add cards/ state/scheduler.json
 git -C "D:\recall_agent\recall_agent" commit -m "cards: <deck> <YYYY-MM-DD> [recall-cards skill]
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"

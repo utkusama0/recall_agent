@@ -222,3 +222,8 @@ __marimo__/
 config.local.json
 worker/.dev.vars
 .recall-secrets
+
+# RECALL — review/tutor logs contain personal study data (timestamps, queries).
+# scheduler.json IS committed (FSRS state); *.jsonl logs are device-local only.
+state/reviews.jsonl
+state/tutor_calls.jsonl
