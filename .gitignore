@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# RECALL — local secrets (never commit). The PWA's GitHub PAT and any Anthropic/
+# Groq key live in the phone's localStorage or the Cloudflare Worker, not here.
+config.local.json
+worker/.dev.vars
+.recall-secrets

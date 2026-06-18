@@ -1,0 +1,410 @@
+{
+  "deck": "CS::OSTEP::ch28-locks",
+  "domain": "cs",
+  "cards": [
+    {
+      "id": "cs-ostep-ch28-locks-001",
+      "front": "What is a mutex lock?",
+      "answer": "A synchronization primitive that grants exclusive access to a critical section — at most one thread may hold it at any time.\nWhile held, all other threads attempting to acquire it are blocked or spin.",
+      "note": "Think of it as the single key to a one-person bathroom — you can't enter until whoever's inside comes out and hands the key back. \"Mutex\" is literally \"MUTual EXclusion.\"",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::1",
+        "grounding::source",
+        "cs::concurrency",
+        "topic::mutex"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-002",
+      "front": "What does \"mutex\" stand for, and what guarantee does it provide?",
+      "answer": "Mutex = mutual exclusion.\nIt guarantees that at most one thread executes a protected critical section concurrently, preventing data races.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::1",
+        "cs::concurrency",
+        "topic::mutex"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-003",
+      "front": "How does the test-and-set (TAS) hardware instruction work?",
+      "answer": "TAS atomically reads a memory word, writes 1 to it, and returns the original value — all as a single indivisible operation.\nAtomicity prevents two threads from both reading 0 and both believing they acquired the lock.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::2",
+        "cs::concurrency",
+        "topic::hardware-atomics"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-004",
+      "front": "How does a spin lock use test-and-set to implement acquire()?",
+      "answer": "acquire() loops calling TAS on the lock word.\nIf TAS returns 0 → lock was free; caller now holds it (TAS wrote 1).\nIf TAS returns 1 → lock was already held; caller spins and retries.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::2",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-005",
+      "front": "Why are spin locks a poor fit for long critical sections on a uniprocessor?",
+      "answer": "A spinning thread consumes its entire scheduling quantum doing no useful work.\nOn a uniprocessor this also prevents the lock-holder from running, potentially causing deadlock if preemption is disabled.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::why",
+        "diff::3",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-006",
+      "front": "Why do OS-based sleep locks incur higher per-operation latency than spin locks?",
+      "answer": "Blocking requires a syscall: the kernel deschedules the thread, places it in a wait queue, and later reschedules it.\nThis context switch overhead is typically hundreds to thousands of nanoseconds — far more than a single TAS instruction.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::why",
+        "diff::3",
+        "cs::concurrency",
+        "topic::sleep-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-007",
+      "front": "What is the key distinction between a spin lock and an OS sleep lock?",
+      "answer": "Spin lock: busy-waits (polls in a loop), very low overhead, wastes CPU while waiting.\nSleep lock: blocks via syscall, higher per-operation cost, but yields the CPU.\nChoice: prefer spin when expected wait time < context-switch cost.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::distinction",
+        "diff::4",
+        "cs::concurrency",
+        "topic::spin-lock",
+        "topic::sleep-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-008",
+      "front": "When should you prefer a spin lock over a sleep lock, and why?",
+      "answer": "When the expected wait time (≈ critical section duration) is shorter than the cost of one context switch.\nIf waiting is brief, the context-switch overhead of a sleep lock exceeds the total cost of spinning.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::distinction",
+        "diff::4",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-009",
+      "front": "Why does a spin lock deadlock on a uniprocessor without OS preemption?",
+      "answer": "The spinning thread monopolizes the only CPU, so the thread holding the lock is never scheduled and never releases it.\nThe spinner waits forever: a true deadlock, not livelock.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::edge-case",
+        "diff::3",
+        "cs::concurrency",
+        "topic::spin-lock",
+        "topic::deadlock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-010",
+      "front": "What is the mutex lock invariant?",
+      "answer": "At most one thread holds the lock at any instant while the lock is in the acquired state.\nEquivalently: the lock word equals 1 if and only if exactly one thread has successfully acquired it.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::invariant",
+        "diff::2",
+        "cs::concurrency",
+        "topic::mutex"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-011",
+      "front": "What atomicity invariant must test-and-set satisfy to guarantee mutual exclusion?",
+      "answer": "The read and write of the lock word must be indivisible — no other thread can observe or modify the lock word between them.\nIf TAS were non-atomic, two threads could both read 0 before either writes 1, allowing double acquisition.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::invariant",
+        "diff::2",
+        "cs::concurrency",
+        "topic::hardware-atomics"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-012",
+      "front": "What failure occurs when a spin lock is implemented without memory barriers?",
+      "answer": "The compiler or CPU may reorder memory accesses across the lock boundary.\nCritical-section reads/writes can appear to execute before acquire() or after release(), silently breaking mutual exclusion.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::failure-mode",
+        "diff::4",
+        "cs::concurrency",
+        "topic::memory-model"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-013",
+      "front": "What is the observable consequence of a missing memory barrier on spin lock release?",
+      "answer": "A thread that acquires the lock may read stale values because the previous holder's writes have not yet propagated globally.\nThe critical section appears correctly serialized in source order but not in hardware execution order.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::failure-mode",
+        "diff::4",
+        "cs::concurrency",
+        "topic::memory-model"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-014",
+      "front": "What is the canonical code pattern for spin lock acquire using test-and-set?",
+      "answer": "Loop until TAS returns 0, meaning the lock was free and is now set to 1 (held) by us.",
+      "note": null,
+      "code": "void acquire(int *lock) {\n  while (TestAndSet(lock) == 1)\n    ; // spin\n}",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::code-pattern",
+        "diff::2",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-015",
+      "front": "What is the canonical code pattern for spin lock release, and why must it include a memory fence?",
+      "answer": "The fence ensures all critical-section writes are globally visible before the lock word reads as 0 to other threads.",
+      "note": null,
+      "code": "void release(int *lock) {\n  *lock = 0; // with store fence\n}",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::code-pattern",
+        "diff::2",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-016",
+      "front": "Give a concrete scenario where a spin lock is required instead of a sleep lock.",
+      "answer": "Interrupt service routines (ISRs) and code running with interrupts disabled cannot call blocking primitives.\nSleeping in an ISR would deadlock; a spin lock is the only safe synchronization primitive in that context.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::application",
+        "diff::3",
+        "cs::concurrency",
+        "topic::spin-lock",
+        "topic::interrupts"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-017",
+      "front": "What is the time complexity of spin lock acquire in the uncontended case, and why?",
+      "answer": "O(1) — a single TAS instruction atomically tests and sets the free lock word.\nNo queuing, kernel calls, or rescheduling are involved when there is no contention.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::complexity",
+        "diff::2",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-018",
+      "front": "Why does spin lock throughput degrade as the number of contending threads grows?",
+      "answer": "Each waiting thread continuously issues TAS on the same cache line, generating O(N) cache-coherence invalidations.\nEvery TAS bounces the cache line across CPUs, turning memory bandwidth into the bottleneck.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::complexity",
+        "diff::3",
+        "cs::concurrency",
+        "topic::spin-lock",
+        "topic::cache-coherence"
+      ]
+    },
+    {
+      "id": "cs-ostep-ch28-locks-019",
+      "front": "Trace two threads (T1, T2) calling acquire() simultaneously on a free spin lock. What happens step by step?",
+      "answer": "1. lock=0; both T1 and T2 call TAS.\n2. Hardware serializes: T1's TAS reads 0, writes 1, returns 0 → T1 acquires lock.\n3. T2's TAS reads 1, returns 1 → T2 spins.\n4. T1 finishes, calls release(), writes lock=0.\n5. T2's next TAS reads 0, writes 1, returns 0 → T2 acquires lock.",
+      "note": null,
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "OSTEP ch28 §locks",
+      "source_text": null,
+      "tags": [
+        "recall::trace",
+        "diff::3",
+        "cs::concurrency",
+        "topic::spin-lock"
+      ]
+    }
+  ]
+}
