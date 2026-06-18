@@ -363,25 +363,10 @@ async function askTutor(card, question, modelOverride) {
   S.pendingTutor.push(JSON.stringify({ id: card.id, model, ts: nowISO() }));
   persistLocal(); syncSoon();
 
-  // Proxy path (keys server-side — recommended for Claude models).
-  const proxyUrl = SET.proxy || S.config?.tutor?.proxy_url;
-  if (proxyUrl) {
-    const r = await fetch(proxyUrl, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, system, user, card_id: card.id, question, max_tokens: mcfg.max_tokens || 700, effort: mcfg.effort }),
-    });
-    if (!r.ok) {
-      let detail = "";
-      try { detail = (await r.json()).error || ""; } catch (_) { try { detail = await r.text(); } catch (_) {} }
-      throw new Error(`tutor proxy ${r.status}: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
-    }
-    const j = await r.json();
-    return j.text || j.content || JSON.stringify(j);
-  }
-
-  // Direct path: Groq only (free key from groq.com).
-  if (!SET.tutorKey) throw new Error("No API key set — add a Groq key in Settings.");
+  // Route by model family — NOT by whether a proxy is configured.
+  // Groq models always go direct to Groq (free key); only Claude models use the proxy.
   if (model.startsWith("groq/")) {
+    if (!SET.tutorKey) throw new Error("No Groq API key set — add one in Settings.");
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SET.tutorKey}` },
@@ -393,8 +378,21 @@ async function askTutor(card, question, modelOverride) {
     if (!r.ok) throw new Error(`Groq ${r.status}: ${await r.text()}`);
     return (await r.json()).choices[0].message.content;
   }
-  // Claude models require a proxy URL — direct browser access is not supported.
-  throw new Error("Claude models require a proxy URL — set it in Settings or switch to Llama (free).");
+
+  // Claude (or any non-Groq) model → proxy only. Keys stay server-side.
+  const proxyUrl = SET.proxy || S.config?.tutor?.proxy_url;
+  if (!proxyUrl) throw new Error("Claude models require a proxy URL — set it in Settings or switch to a free Groq model.");
+  const r = await fetch(proxyUrl, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model, system, user, card_id: card.id, question, max_tokens: mcfg.max_tokens || 700, effort: mcfg.effort }),
+  });
+  if (!r.ok) {
+    let detail = "";
+    try { detail = (await r.json()).error || ""; } catch (_) { try { detail = await r.text(); } catch (_) {} }
+    throw new Error(`tutor proxy ${r.status}: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
+  }
+  const j = await r.json();
+  return j.text || j.content || JSON.stringify(j);
 }
 
 // ---------- sync ----------
