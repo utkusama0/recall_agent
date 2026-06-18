@@ -11,6 +11,7 @@ Run: python scripts/import_to_anki.py
 Requires: Anki open with AnkiConnect add-on (code 2055492159) running on :8765.
 """
 
+import sys
 import json
 import pathlib
 import re
@@ -18,6 +19,14 @@ import shutil
 import datetime
 import urllib.request
 import urllib.error
+
+# Force UTF-8 stdout/stderr so non-ASCII status chars (→, —) don't crash on
+# Windows when output is redirected to a file (default cp1254 codec is strict).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
 APPROVED_DIR = REPO_ROOT / "_approved"

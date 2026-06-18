@@ -2,9 +2,21 @@
 
 **Target model:** Sonnet 4.6 (default). Escalate to Opus 4.8 only for hard mathematical proofs or multi-step formal derivations.
 
-**Input:** A digest block from `_inbox/digest.md`. The block header supplies DECK and SOURCE.
+**Input:** A digest block from `_inbox/digest.md`. The block header supplies DECK and SOURCE. The block body should contain the actual chapter/source TEXT (or detailed notes). If only keyword facts are present, see GROUNDING.
 
 **Output:** ONE import-ready Anki TSV block and a single summary line. Nothing else — no preamble, no commentary.
+
+---
+
+## GROUNDING (source fidelity)
+
+The answer portion of every card must come from the provided source text.
+
+- Text between `<<<SOURCE` and `SOURCE>>>` delimiters (if present) is the authoritative source. Generate dense coverage of everything in it. Any `[type:diff]` seed lines below the source block are only emphasis hints.
+- **If the block contains real chapter text or detailed notes:** Base each card's answer strictly on that text. Do NOT introduce facts, claims, or examples that are not supported by the source. Match the source's terminology, notation, and depth.
+- **If a fact would be useful but is NOT in the source:** do not put it in the answer. You may surface it only inside the separated `💡 Note` (see Back format), explicitly framed as your own elaboration.
+- **If the block contains only keyword facts (no real text):** generate cards from those facts plus your own knowledge, but tag every such card `grounding::model` instead of `grounding::source`, so review knows it is not textbook-verified.
+- **Never** let the `Source` field imply textbook provenance for content that actually came from your own knowledge. The `Source` field labels where the *answer* came from.
 
 ---
 
@@ -70,9 +82,12 @@ Emit exactly this block, with no text before or after it:
 **Field rules:**
 - `GUID` = `<deck-slug>-NNN` zero-padded to 3 digits (e.g. `cs-ostep-ch28-001`). Deterministic: same fact always gets the same GUID so re-import updates rather than duplicates.
 - `Front` = 1–2 sentences, unambiguous, no answer leakage. For procedures, ask for one step or its reason.
-- `Back` = first sentence is the headline answer. ≤2–3 short elaboration clauses follow. Plain English before formal notation. Use `<br>` for line breaks within the field — never a literal newline.
+- `Back` = TWO clearly separated parts:
+  1. **Answer (source-grounded):** first sentence is the headline answer, then ≤2–3 short elaboration clauses — all drawn strictly from the source text. Plain English before formal notation.
+  2. **Claude's note (understanding aid):** after the answer, emit `<hr>` then a div: `<div style="color:#9aa0a6;font-size:0.9em"><b>💡 Note:</b> <intuition, analogy, why-it-matters, or common-confusion warning></div>`. This is YOUR explanation to help the learner understand — it may go beyond the source, but it must be clearly inside this note, never mixed into the answer above the `<hr>`.
+- Use `<br>` for line breaks within the field — never a literal newline. The `<hr>` separates answer from note.
 - `Source` = SOURCE_REF from the block header + section identifier (e.g. `OSTEP ch28 §locks`).
-- `Tags` = space-separated, hierarchical with `::`. Always include `recall::<type>` and `diff::<1-5>`. Add 1–2 content tags (e.g. `cs::concurrency topic::mutex`).
+- `Tags` = space-separated, hierarchical with `::`. Always include `recall::<type>`, `diff::<1-5>`, and `grounding::source` (answer from provided text) or `grounding::model` (answer from your own knowledge). Add 1–2 content tags (e.g. `cs::concurrency topic::mutex`).
 
 **Notetype override:** For vocabulary decks, change the `#notetype:` line to `Basic (and reversed)`.
 

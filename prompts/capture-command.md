@@ -27,6 +27,28 @@ Then one fact per line. Stop after the last fact — no summary.
 
 ---
 
+## TEXTBOOK MODE (grounded cards)
+
+When you want cards grounded in actual chapter text (not just facts from memory), include the source text in the block. The generator will base every answer strictly on it and tag cards `grounding::source`.
+
+Structure the block like this:
+
+```
+## <TOPIC> · <YYYY-MM-DD> · deck:<DECK> · src:<SOURCE>
+
+<<<SOURCE
+[paste the actual chapter / section text here — as much as you have]
+SOURCE>>>
+
+[def:1] optional seed facts to emphasize (the generator covers the full text regardless)
+```
+
+- Everything between `<<<SOURCE` and `SOURCE>>>` is treated as authoritative — answers come from here.
+- Seed `[type:diff]` lines below are optional hints about what to emphasize.
+- Without a `<<<SOURCE` block, cards are generated from memory and tagged `grounding::model`.
+
+---
+
 ## USAGE
 
 1. Replace `<DECK>` with the target Anki deck path, e.g. `CS::OSTEP::ch28-locks`.

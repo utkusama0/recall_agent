@@ -18,6 +18,14 @@ import datetime
 import pathlib
 import anthropic
 
+# Force UTF-8 stdout/stderr so non-ASCII status chars (→, —) don't crash on
+# Windows when output is redirected to a file (default cp1254 codec is strict).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 REPO_ROOT = pathlib.Path(__file__).parent.parent
 INBOX_FILE = REPO_ROOT / "_inbox" / "digest.md"
 REVIEW_DIR = REPO_ROOT / "_review"
