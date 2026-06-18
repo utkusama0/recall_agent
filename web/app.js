@@ -370,7 +370,11 @@ async function askTutor(card, question, modelOverride) {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model, system, user, card_id: card.id, question, max_tokens: mcfg.max_tokens || 700, effort: mcfg.effort }),
     });
-    if (!r.ok) throw new Error(`tutor proxy ${r.status}`);
+    if (!r.ok) {
+      let detail = "";
+      try { detail = (await r.json()).error || ""; } catch (_) { try { detail = await r.text(); } catch (_) {} }
+      throw new Error(`tutor proxy ${r.status}: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
+    }
     const j = await r.json();
     return j.text || j.content || JSON.stringify(j);
   }
