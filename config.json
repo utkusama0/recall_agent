@@ -13,8 +13,10 @@
   },
   "tutor": {
     "proxy_url": "",
-    "default_model": "groq/llama-3.3-70b-versatile",
+    "default_model": "groq/openai/gpt-oss-120b",
     "models": [
+      { "id": "groq/openai/gpt-oss-120b", "label": "GPT-OSS 120B — reasoning (free)", "max_tokens": 1200 },
+      { "id": "groq/groq/compound", "label": "Groq Compound — web search (free)", "max_tokens": 1200 },
       { "id": "groq/llama-3.3-70b-versatile", "label": "Llama 3.3 70B (free)", "max_tokens": 700 },
       { "id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5", "max_tokens": 800 },
       { "id": "claude-sonnet-4-6", "label": "Claude Sonnet 4.6", "max_tokens": 800 },
