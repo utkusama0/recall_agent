@@ -7,7 +7,11 @@
 
 const ALLOWED_ORIGIN = "https://utkusama0.github.io";
 const ANTHROPIC_API   = "https://api.anthropic.com/v1/messages";
-const ALLOWED_MODELS  = ["claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-8"];
+// Allow any Claude model. Prefix check avoids brittle exact-match maintenance
+// while still blocking abuse (only Anthropic Claude models can be requested).
+function isAllowedModel(m) {
+  return typeof m === "string" && m.startsWith("claude-");
+}
 
 function corsHeaders(origin) {
   // Only allow requests from the GitHub Pages origin.
@@ -49,8 +53,8 @@ export default {
 
     const { model, system, user, max_tokens } = body;
 
-    // Whitelist Claude models only — reject anything else
-    if (!model || !ALLOWED_MODELS.includes(model)) {
+    // Claude models only — reject anything else
+    if (!isAllowedModel(model)) {
       return new Response(JSON.stringify({ error: "Model not allowed" }), {
         status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
       });
