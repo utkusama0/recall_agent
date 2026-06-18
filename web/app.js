@@ -242,18 +242,42 @@ function gradeCard(id, rating) {
 }
 
 // ---------- rendering (XSS-safe markdown + math) ----------
+const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 function mdToHtml(text) {
   if (!text) return "";
   if (!window.DOMPurify) {
     toast("DOMPurify not loaded — refresh page", 4000);
     return "[Rendering unavailable]";
   }
-  let h = text
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
+  // 1. Pull out fenced code blocks first so nothing else rewrites their contents.
+  const blocks = [];
+  let h = text.replace(/```[ \t]*([\w+-]*)\r?\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const i = blocks.length;
+    const label = lang ? `<div class="code-lang">${escapeHtml(lang)}</div>` : "";
+    blocks.push(`${label}<pre class="code"><code>${escapeHtml(code.replace(/\n$/, ""))}</code></pre>`);
+    return ` B${i} `;
+  });
+
+  // 2. Protect inline code spans too.
+  const inlines = [];
+  h = h.replace(/`([^`\n]+)`/g, (_, code) => {
+    const i = inlines.length;
+    inlines.push(`<code class="inline">${escapeHtml(code)}</code>`);
+    return ` I${i} `;
+  });
+
+  // 3. Escape everything else, then apply lightweight markdown.
+  h = escapeHtml(h)
+    .replace(/^###?\s+(.+)$/gm, "<h4>$1</h4>")
+    .replace(/^\s*[-*]\s+(.+)$/gm, "<div class=\"li\">• $1</div>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
     .replace(/\n/g, "<br>");
+
+  // 4. Restore protected spans/blocks (strip stray <br> right after a code block).
+  h = h.replace(/ I(\d+) /g, (_, i) => inlines[Number(i)])
+       .replace(/ B(\d+) (<br>)?/g, (_, i) => blocks[Number(i)]);
   return DOMPurify.sanitize(h);
 }
 function renderMath(el) {
@@ -282,19 +306,47 @@ function langCodeFromCard(card) {
   return map[sub] || null;
 }
 
-function speak(text, lang) {
+function isLanguageCard(card) {
+  const dom = card._slug ? S.decks[card._slug]?.domain : null;
+  if (dom === "language") return true;
+  if ((card.tags || []).some((t) => t.startsWith("lang::"))) return true;
+  return !!langCodeFromCard(card);
+}
+
+// Voices load asynchronously in most browsers — resolve once they're ready.
+function voicesReady() {
+  return new Promise((resolve) => {
+    const v = speechSynthesis.getVoices();
+    if (v.length) return resolve(v);
+    speechSynthesis.onvoiceschanged = () => resolve(speechSynthesis.getVoices());
+    setTimeout(() => resolve(speechSynthesis.getVoices()), 1000);
+  });
+}
+
+async function speak(text, lang) {
+  if (!text) return;
   try {
+    const voices = await voicesReady();
     const u = new SpeechSynthesisUtterance(text);
-    if (lang) u.lang = lang;
+    if (lang) {
+      u.lang = lang;
+      // Pick a voice whose language matches (e.g. "ja", "ja-JP") so it's not read with an English accent.
+      const match = voices.find((v) => v.lang?.toLowerCase().startsWith(lang.toLowerCase()))
+        || voices.find((v) => v.lang?.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+      if (match) u.voice = match;
+    }
+    u.rate = 0.9;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   } catch (_) {}
 }
-async function playPronunciation(card) {
+
+async function playPronunciation(card, what = "word") {
   const lang = langCodeFromCard(card);
   const word = card.front?.trim();
-  // For English, try the free Dictionary API for real audio first.
-  if (!lang || lang === "en") {
+  const target = what === "example" ? (card.example || word) : word;
+  // For English single words, try the free Dictionary API for real human audio first.
+  if ((!lang || lang === "en") && what === "word") {
     try {
       const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
       if (r.ok) {
@@ -304,7 +356,7 @@ async function playPronunciation(card) {
       }
     } catch (_) {}
   }
-  speak(card.example || word, lang);
+  speak(target, lang);
 }
 
 function cardBodyHtml(c) {
@@ -313,12 +365,14 @@ function cardBodyHtml(c) {
   if (c.math) {
     html += `<div class="answer math-block">${DOMPurify.sanitize(c.math)}</div>`;
   }
-  if (c.code) html += `<div class="code"><pre><code>${mdToHtml(c.code)}</code></pre></div>`;
-  if (c.example || c.ipa) {
+  if (c.code) html += `<pre class="code"><code>${escapeHtml(c.code)}</code></pre>`;
+  const langCard = isLanguageCard(c);
+  if (c.example || c.ipa || langCard) {
     const ipaHtml = c.ipa ? `<span class="ipa"> /${c.ipa}/</span>` : "";
     const exHtml = c.example ? `<em>${mdToHtml(c.example)}</em>` : "";
-    html += `<div class="answer lang-row">${exHtml}${ipaHtml}
-      <button class="speak" data-speak="1" title="Pronounce">🔊</button></div>`;
+    const wordBtn = langCard ? `<button class="speak" data-speak="word" title="Pronounce word">🔊</button>` : "";
+    const exBtn = (langCard && c.example) ? `<button class="speak" data-speak="example" title="Pronounce sentence">🔊 sentence</button>` : "";
+    html += `<div class="answer lang-row">${exHtml}${ipaHtml}${wordBtn}${exBtn}</div>`;
   }
   if (c.note) html += `<div class="note"><b>💡 Note:</b> ${mdToHtml(c.note)}</div>`;
   if (c.application) {
@@ -536,7 +590,8 @@ function showReviewCard() {
     document.querySelectorAll(".grades button[data-r]").forEach((b) =>
       b.onclick = () => doGrade(c, Number(b.dataset.r)));
     $("#askBtn").onclick = () => askUI(c, $("#tutorOut"));
-    const sp = $("#back [data-speak]"); if (sp) sp.onclick = () => playPronunciation(c);
+    document.querySelectorAll("#back [data-speak]").forEach((b) =>
+      b.onclick = () => playPronunciation(c, b.dataset.speak));
   }
   $("#suspendBtn").onclick = () => { setSuspended(c, true); nextCard(); };
   $("#editBtn").onclick = () => openEditor(c._slug, c.id);

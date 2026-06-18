@@ -103,12 +103,28 @@
     }
     .practice .illus { color: var(--muted); font-size: 12px; }
     .src { margin-top: 12px; }
-    .src pre, .answer pre, .code pre { white-space: pre-wrap; }
+    .src pre, .answer pre, .code pre, pre.code { white-space: pre-wrap; word-break: break-word; }
     pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .code {
+    .code, pre.code {
       margin-top: 10px; background: var(--code); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 14px;
+      border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 13.5px; line-height: 1.5;
+      color: #d6deeb;
     }
+    pre.code { margin: 8px 0; }
+    pre.code code { color: inherit; background: none; padding: 0; }
+    /* Inline code: subtle pill so it doesn't blend into prose */
+    code.inline {
+      background: var(--panel2); color: #9fd0ff; border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 5px; font-size: 0.88em; word-break: break-word;
+    }
+    /* Language label shown above a fenced code block */
+    .code-lang {
+      margin-top: 10px; margin-bottom: -6px; font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .li { margin: 3px 0 3px 4px; }
+    .tutor-ans h3, .tutor-ans h4, .answer h3, .answer h4 { margin: 12px 0 4px; font-size: 15px; color: #cdd6f4; }
+    .tutor-ans strong, .answer strong { color: #fff; }
     details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
 
