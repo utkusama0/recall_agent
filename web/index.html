@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -127,11 +127,11 @@
 
     /* Tutor chat thread: scrolls inside its own box so the page doesn't grow */
     .chat-thread {
-      max-height: 46vh; overflow-y: auto; display: flex; flex-direction: column;
+      max-height: 58vh; overflow-y: auto; display: flex; flex-direction: column;
       gap: 8px; padding: 4px 2px; margin-bottom: 8px;
     }
     .msg {
-      max-width: 88%; padding: 8px 12px; border-radius: 14px; font-size: 14.5px;
+      max-width: 96%; padding: 10px 14px; border-radius: 14px; font-size: 15px;
       line-height: 1.55; word-break: break-word;
     }
     .msg-user { align-self: flex-end; background: var(--accent2); color: #fff; border-bottom-right-radius: 4px; }
@@ -141,6 +141,15 @@
     .chat-input { display: flex; gap: 8px; align-items: flex-end; }
     .chat-input textarea { min-height: 0; resize: none; line-height: 1.4; }
     .chat-input button { white-space: nowrap; min-height: 40px; }
+    /* Markdown tables from tutor: horizontally scrollable */
+    .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 10px 0; border-radius: 6px; border: 1px solid var(--border); }
+    .md-table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+    .md-table th { background: var(--panel2); color: var(--muted); font-weight: 600; font-size: 11px;
+      text-transform: uppercase; letter-spacing: .4px; padding: 6px 10px; border: 1px solid var(--border);
+      white-space: nowrap; text-align: left; }
+    .md-table td { background: var(--code); color: var(--fg); padding: 6px 10px; border: 1px solid var(--border);
+      white-space: nowrap; vertical-align: top; }
+    .md-table tr:nth-child(even) td { background: var(--panel); }
     details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
 

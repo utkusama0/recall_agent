@@ -1,4 +1,4 @@
-// RECALL PWA — repo-native, phone-first spaced-repetition reviewer.
+﻿// RECALL PWA — repo-native, phone-first spaced-repetition reviewer.
 // FSRS runs in-browser (zero tokens). Cards + state live in the GitHub repo;
 // the app reads/writes them via the GitHub Contents API using a PAT kept only
 // in this device's localStorage. Offline-first via IndexedDB + a sync queue.
@@ -263,10 +263,41 @@ function mdToHtml(text) {
   h = h.replace(/`([^`\n]+)`/g, (_, code) => {
     const i = inlines.length;
     inlines.push(`<code class="inline">${escapeHtml(code)}</code>`);
-    return ` I${i} `;
+    return ` I${i} `;
   });
 
-  // 3. Escape everything else, then apply lightweight markdown.
+  // 3. Extract markdown tables (runs of lines starting with |) before escaping.
+  const tables = [];
+  {
+    const tlines = h.split("\n");
+    const out = [];
+    let buf = [];
+    const isSep = (r) => /^\|[\s|:-]+\|$/.test(r.trim());
+    const parseCells = (row) => row.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+    const flushBuf = () => {
+      if (buf.length < 2) { out.push(...buf); buf = []; return; }
+      const si = buf.findIndex(isSep);
+      if (si < 0) { out.push(...buf); buf = []; return; }
+      const hdr = si > 0 ? buf[si - 1] : null;
+      const rows = buf.filter((_, idx) => idx !== si && idx !== si - 1);
+      let t = `<div class="tbl-wrap"><table class="md-table">`;
+      if (hdr)
+        t += `<thead><tr>` + parseCells(hdr).map((c) => `<th>${escapeHtml(c)}</th>`).join("") + `</tr></thead>`;
+      t += "<tbody>";
+      for (const row of rows) t += `<tr>` + parseCells(row).map((c) => `<td>${escapeHtml(c)}</td>`).join("") + `</tr>`;
+      t += "</tbody></table></div>";
+      const ti = tables.length; tables.push(t);
+      out.push(` T${ti} `); buf = [];
+    };
+    for (const line of tlines) {
+      if (line.trimStart().startsWith("|")) buf.push(line);
+      else { if (buf.length) flushBuf(); out.push(line); }
+    }
+    if (buf.length) flushBuf();
+    h = out.join("\n");
+  }
+
+  // 4. Escape everything else, then apply lightweight markdown.
   h = escapeHtml(h)
     .replace(/^###?\s+(.+)$/gm, "<h4>$1</h4>")
     .replace(/^\s*[-*]\s+(.+)$/gm, "<div class=\"li\">• $1</div>")
@@ -274,9 +305,10 @@ function mdToHtml(text) {
     .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
     .replace(/\n/g, "<br>");
 
-  // 4. Restore protected spans/blocks (strip stray <br> right after a code block).
-  h = h.replace(/ I(\d+) /g, (_, i) => inlines[Number(i)])
-       .replace(/ B(\d+) (<br>)?/g, (_, i) => blocks[Number(i)]);
+  // 5. Restore protected spans/blocks.
+  h = h.replace(/ I(\d+) /g, (_, i) => inlines[Number(i)])
+       .replace(/ T(\d+) (<br>)?/g, (_, i) => tables[Number(i)])
+       .replace(/ B(\d+) (<br>)?/g, (_, i) => blocks[Number(i)]);
   return DOMPurify.sanitize(h);
 }
 function renderMath(el) {
