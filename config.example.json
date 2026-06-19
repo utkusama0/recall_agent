@@ -17,7 +17,7 @@
     "default_model": "groq/openai/gpt-oss-120b",
     "models": [
       { "id": "groq/openai/gpt-oss-120b", "label": "GPT-OSS 120B — reasoning (free)", "max_tokens": 1200, "context_window": 16384 },
-      { "id": "groq/groq/compound", "label": "Groq Compound — web search (free)", "max_tokens": 1200, "context_window": 8192 },
+      { "id": "groq/groq/compound", "label": "Groq Compound — web search (free)", "max_tokens": 700, "context_window": 4096 },
       { "id": "groq/llama-3.3-70b-versatile", "label": "Llama 3.3 70B (free)", "max_tokens": 700, "context_window": 131072 }
     ]
   }

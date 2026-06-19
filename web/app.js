@@ -450,17 +450,16 @@ function tutorBtnLabel() {
 // ---------- tutor ----------
 // Card grounding goes into the system prompt once; the conversation itself
 // stays a clean user/assistant exchange so follow-up questions keep context.
-function cardSystemPrompt(card) {
-  const srcSnippet = card.source_text ? card.source_text.slice(0, 400) : "";
-  const grounding = [card.source, srcSnippet, card.answer, card.note]
-    .filter(Boolean).join("\n");
-  return (
-    "You are a study tutor helping with one flashcard. Explain clearly and in depth, " +
-    "grounded in the provided source. Add intuition and concrete examples. Be concise and " +
-    "pedagogical; do not invent facts beyond the source without flagging them. " +
-    "The student may ask follow-up questions — keep the thread coherent.\n\n" +
-    `CARD\nQ: ${card.front}\nA: ${card.answer}\n\nSOURCE/CONTEXT:\n${grounding}`
-  );
+function cardSystemPrompt(card, maxChars) {
+  const src = card.source_text ? card.source_text.slice(0, 300) : "";
+  const context = [card.source, src, card.note].filter(Boolean).join("\n");
+  let prompt =
+    "You are a concise study tutor for one flashcard. Explain clearly, grounded in the source. " +
+    "Add intuition and examples. Don't invent facts without flagging them.\n\n" +
+    `Q: ${card.front}\nA: ${card.answer}` +
+    (context ? `\n\nCONTEXT:\n${context}` : "");
+  if (maxChars && prompt.length > maxChars) prompt = prompt.slice(0, maxChars);
+  return prompt;
 }
 
 // ~4 chars per token rough estimate; keep conversation under model context budget
@@ -477,28 +476,41 @@ function trimHistory(history, maxChars) {
 async function askTutor(card, history, modelOverride) {
   const model = modelOverride || SET.model || S.config?.tutor?.default_model || "groq/llama-3.3-70b-versatile";
   const mcfg = (S.config?.tutor?.models || []).find((m) => m.id === model) || {};
-  const system = cardSystemPrompt(card);
+  const maxTokens = mcfg.max_tokens || 700;
+  const ctxWindow = mcfg.context_window || 8192;
+  // ~4 chars per token; reserve space for system prompt + response
+  const ctxChars = ctxWindow * 4;
+  const sysMaxChars = Math.min(Math.floor(ctxChars * 0.5), 4000);
+  const system = cardSystemPrompt(card, sysMaxChars);
+  const histBudget = ctxChars - system.length - maxTokens * 4;
+  const trimmed = trimHistory(history, Math.max(histBudget, 800));
 
   S.pendingTutor.push(JSON.stringify({ id: card.id, model, ts: nowISO() }));
   persistLocal(); syncSoon();
 
-  // Groq only — free key from groq.com, sent directly from the browser.
   if (!SET.tutorKey) throw new Error("No Groq API key set — add one in Settings.");
   const groqModel = model.startsWith("groq/") ? model.slice(5) : model;
-  // Budget: leave room for system prompt + response tokens (~4 chars/token)
-  const ctxBudget = (mcfg.context_window || 8192) * 4;
-  const sysChars = system.length;
-  const maxHistoryChars = ctxBudget - sysChars - (mcfg.max_tokens || 700) * 4;
-  const trimmed = trimHistory(history, Math.max(maxHistoryChars, 2000));
 
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SET.tutorKey}` },
-    body: JSON.stringify({
-      model: groqModel, max_tokens: mcfg.max_tokens || 700,
-      messages: [{ role: "system", content: system }, ...trimmed],
-    }),
-  });
+  async function doFetch(sys, hist) {
+    return fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SET.tutorKey}` },
+      body: JSON.stringify({
+        model: groqModel, max_tokens: maxTokens,
+        messages: [{ role: "system", content: sys }, ...hist],
+      }),
+    });
+  }
+
+  let r = await doFetch(system, trimmed);
+
+  // 413 = request too large — retry with aggressive truncation
+  if (r.status === 413) {
+    const smallSys = cardSystemPrompt(card, 1200);
+    const smallHist = trimHistory(trimmed, 800);
+    r = await doFetch(smallSys, smallHist);
+  }
+
   if (!r.ok) {
     const body = await r.text();
     const short = body.length > 200 ? body.slice(0, 200) + "…" : body;
