@@ -1,7 +1,7 @@
 // RECALL service worker — caches the app shell + CDN libs for offline review.
 // Card/state data is NOT cached here (it lives in IndexedDB, written by app.js);
 // GitHub API and tutor calls always go to the network.
-const CACHE = "recall-v13";
+const CACHE = "recall-v14";
 const SHELL = [
   "./", "./index.html", "./app.js", "./manifest.webmanifest", "./icon.svg",
   "https://cdn.jsdelivr.net/npm/ts-fsrs@4.7.0/+esm",
@@ -49,17 +49,32 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.hostname === "api.github.com" || url.hostname.includes("groq") ||
       url.hostname.includes("dictionaryapi")) return;
-  e.respondWith(
-    caches.match(e.request).then((hit) =>
-      hit || fetch(e.request).then((res) => {
-        if (e.request.method === "GET" && res.ok && (url.origin === location.origin || url.hostname.includes("jsdelivr"))) {
+  // Local app files: network-first so deploys take effect immediately.
+  // CDN libs: cache-first (immutable, versioned by URL).
+  const isLocal = url.origin === location.origin;
+  if (isLocal) {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        if (e.request.method === "GET" && res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => hit)
-    )
-  );
+      }).catch(() => caches.match(e.request))
+    );
+  } else {
+    e.respondWith(
+      caches.match(e.request).then((hit) =>
+        hit || fetch(e.request).then((res) => {
+          if (e.request.method === "GET" && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, copy));
+          }
+          return res;
+        }).catch(() => hit)
+      )
+    );
+  }
 });
 
 // ---------- message handler (config from app.js) ----------
