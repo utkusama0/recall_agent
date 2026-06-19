@@ -432,16 +432,16 @@
     "last_review": null
   },
   "dea1-001": {
-    "due": "2026-06-19T10:16:11.103Z",
-    "stability": 0,
-    "difficulty": 0,
+    "due": "2026-06-19T10:18:30.587Z",
+    "stability": 0.40255,
+    "difficulty": 7.1949,
     "elapsed_days": 0,
     "scheduled_days": 0,
     "learning_steps": 0,
-    "reps": 0,
+    "reps": 1,
     "lapses": 0,
-    "state": 0,
-    "last_review": null
+    "state": 1,
+    "last_review": "2026-06-19T10:17:30.587Z"
   },
   "dea1-002": {
     "due": "2026-06-19T10:16:11.103Z",
