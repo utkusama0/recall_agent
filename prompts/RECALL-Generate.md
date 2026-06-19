@@ -59,51 +59,80 @@ Every algorithm needs: mechanism + complexity + why-vs-alternative + trace + edg
 
 ### Language
 
-**All explanations in English.** The `answer`, `note`, and `application` fields are in English. Only the target word/phrase, `example` sentence, and `ipa` are in the target language.
+**THE USER IS A BEGINNER LEARNING THIS LANGUAGE. THEY CANNOT READ THE TARGET LANGUAGE YET.**
 
-**`front` field — the word only:**
-- Vocabulary: just the target-language word (+ article for nouns). Nothing else — no English, no question.
-  - Noun: `die Küche` (article + word, so TTS reads the article too)
-  - Verb: `abfahren`
-  - Adjective: `schnell`
-  - Phrase/idiom: `Bescheid geben`
-- Grammar cards: a short English question. E.g. "Which case does **mit** take?"
-- Distinction cards: both words. E.g. "kennen vs. wissen"
-- The front is what TTS reads when the user taps 🔊 — keep it clean and pronounceable.
+Every field the user reads must be primarily in English. The only places where the target language appears are:
+1. `front` — the word/phrase itself (what TTS reads)
+2. `example` — one sentence in the target language, always followed by `(English translation)`
+3. `ipa` — phonetic transcription
 
-**`answer` field (English):**
-- English definition(s), part of speech, register if notable
-- Nouns: article + plural. E.g. "kitchen. die Küche, pl. die Küchen"
-- Verbs: auxiliary (sein/haben) + past participle + irregularity. E.g. "to depart. ist abgefahren, separable, irregular (fährt ab)"
-- Grammar cards: clear English rule with German examples + translations
+Everything else — `answer`, `note`, `application`, `prompts` — is written **entirely in English**.
 
-**`example` field:**
-- A natural sentence in the target language, followed by English translation in parentheses.
-- E.g. "Der Zug fährt um 8 Uhr ab. (The train departs at 8 o'clock.)"
-- Calibrate complexity to the card's CEFR level.
-- The user can tap 🔊 on the example sentence separately to hear it spoken.
+---
+
+#### HARD RULES — violations make the card useless
+
+**`front` — ONLY the target-language word:**
+- Noun: `die Küche`
+- Verb: `abfahren`
+- Adjective: `schnell`
+- NEVER a German question. NEVER a German sentence. NEVER "Wie sagt man..." or "Was bedeutet...".
+- The front is what TTS reads — it must be one clean word/phrase.
+
+**`answer` — English explanation that TEACHES:**
+- Start with the English meaning, then grammar details in English.
+- The answer must be useful to someone who knows ZERO German.
+- German words may appear as inline references but the explanation is English.
+
+✅ GOOD answer for `dreißig`:
+"Thirty. Note: spelled with ß (sharp S). Unlike English 'thirty' from 'three', German 'dreißig' is irregular — it does NOT follow the regular -zig pattern (it would be *dreizig if regular). All other tens are regular: vierzig (40), fünfzig (50), sechzig (60), siebzig (70), achtzig (80), neunzig (90)."
+
+❌ BAD answer for `dreißig`:
+"30=dreissig, 40=vierzig, 50=fuenfzig, 60=sechzig..."
+(This is a lookup table, not an explanation. It doesn't teach anything.)
+
+✅ GOOD answer for `einundzwanzig`:
+"Twenty-one. German builds two-digit numbers in reverse: ones + 'und' + tens. So 21 = ein·und·zwanzig (one-and-twenty). This is the opposite of English word order. Applies to all numbers 21–99: 45 = fünf·und·vierzig, 99 = neun·und·neunzig."
+
+❌ BAD answer for `einundzwanzig`:
+"Pattern: [ones-unit] + und + [tens-unit]\n21=einundzwanzig, 45=fuenfundvierzig..."
+(Cryptic formula + German dump. Useless to a beginner.)
+
+**`note` — English teaching insight:**
+- WHY something is the way it is, common mistakes, mnemonics, comparison with English.
+- ✅ "Dreißig is the only irregular tens number — every other tens word just adds -zig to the digit. A mnemonic: 'drei' changes its vowel like English 'three'→'thirty'."
+- ❌ "dreissig is irregular (not dreizig). sechzig and siebzig drop letters."
+
+**`example` — target-language sentence + (English translation):**
+- Always end with the English translation in parentheses.
+- ✅ `"Das kostet dreißig Euro. (That costs thirty euros.)"`
+- ❌ `"Das kostet dreissig Euro."` (no translation — useless to a beginner)
+
+**`prompts` — English recall challenges:**
+- Short English questions the user should try to answer before flipping.
+- ✅ `["Meaning?", "Is it regular or irregular?", "How do you say 35?"]`
+- ❌ `["Wie schreibt man das?"]` (German — the user can't read this)
 
 **`ipa`:** always filled for every vocabulary card.
 
-**`note` field (English):** register (formal/colloquial/slang), false friends, common mistakes, grammar notes (separable verb, case it governs, etc.), related words.
+**One card = one word.** Do not combine multiple words into one card (e.g. "numbers 30–90" is NOT a card — make separate cards for dreißig, vierzig, fünfzig, etc.). Each word gets its own card, its own explanation, its own example.
 
-**Tags:** must include `lang::<code>` (e.g. `lang::de`, `lang::tr`), `level::<a1|a2|b1|b2|c1>`, and a topic tag (`topic::food`, `topic::grammar-cases`, etc.).
-
-**Near-synonyms:** always add a `distinction` card.
+---
 
 #### Card types for language
 
 | Type tag | Front | When to use |
 |----------|-------|-------------|
-| `recall::vocab` | the word (+ article) | Every vocabulary word |
+| `recall::vocab` | the word (+ article) | Every vocabulary word. One word per card. |
 | `recall::article-rule` | English question | Major suffix/category patterns (generate once, not per word) |
-| `recall::article-drill` | `der/die/das [noun]?` | Only for high-frequency nouns with surprising articles |
 | `recall::grammar-rule` | English question | Case rules, word order, tense formation |
 | `recall::grammar-pattern` | English question | Conjugation tables, declension (use `code` field for table layout) |
 | `recall::distinction` | `word A vs. word B` | Near-synonyms, easily confused pairs |
 | `recall::preposition` | the preposition | Which case it governs, with examples |
 | `recall::usage` | English question | Situational phrases (ordering food, at the doctor) |
 | `recall::word-formation` | the compound word | How compound nouns are built (B1+) |
+
+**Near-synonyms:** always add a `distinction` card.
 
 #### Level calibration
 
@@ -122,6 +151,7 @@ When given a large wordlist (e.g. 650 Goethe A1 words):
 - Article pattern rules (~12 cards): generate only in batch 1. Do not repeat.
 - Target ~1.5 cards per word on average. Simple nouns = 1 card; irregular verbs or synonym pairs = 2–3 cards.
 - Each batch becomes one deck: `Language::German::A1-batch-01` or themed (`Language::German::A1-food`).
+- **One word = one card.** Never combine multiple vocabulary words into a single card.
 
 ### Finance
 - Every concept requires: concept + mechanics + `risk` (mandatory) + comparison cards.
