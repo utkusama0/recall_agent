@@ -12,16 +12,16 @@
     "last_review": "2026-06-19T00:16:04.647Z"
   },
   "cs-ostep-ch28-locks-002": {
-    "due": "2026-06-18T21:29:50.733579+00:00",
-    "stability": 0,
-    "difficulty": 0,
+    "due": "2026-06-19T00:21:08.114Z",
+    "stability": 1.18385,
+    "difficulty": 6.48830527,
     "elapsed_days": 0,
     "scheduled_days": 0,
     "learning_steps": 0,
-    "reps": 0,
+    "reps": 1,
     "lapses": 0,
-    "state": 0,
-    "last_review": null
+    "state": 1,
+    "last_review": "2026-06-19T00:16:08.114Z"
   },
   "cs-ostep-ch28-locks-003": {
     "due": "2026-06-18T21:29:50.733583+00:00",
