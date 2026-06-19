@@ -208,6 +208,12 @@
     .hidden { display: none !important; }
     .speak { background: transparent; border: none; color: var(--accent); padding: 4px 6px; font-size: 20px; cursor: pointer; }
     .ipa { color: var(--muted); font-style: italic; }
+    .prompt-tag { font-size: 12px; color: var(--warn); }
+    .cloze {
+      margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--accent);
+      background: var(--panel2); border-radius: 8px; font-size: 15px; line-height: 1.5;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -229,6 +235,6 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script type="module" src="app.js?v=10"></script>
+  <script type="module" src="app.js?v=11"></script>
 </body>
 </html>

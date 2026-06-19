@@ -58,10 +58,70 @@ Every algorithm needs: mechanism + complexity + why-vs-alternative + trace + edg
 `code` field: use only for actual code snippets (multi-line); `answer` stays plain text.
 
 ### Language
-- Vocabulary cards: `ipa` field for phonetic transcription, `example` field for a natural example sentence.
-- Tags must include `lang::<code>` (e.g. `lang::tr`, `lang::en`, `lang::ja`) for TTS language routing.
-- `note` field: register (formal/informal/slang), watch-out (false friends, usage traps).
-- Near-synonyms: always add a `distinction` card.
+
+**All explanations in English.** The `answer`, `note`, and `application` fields are in English. Only the target word/phrase, `example` sentence, and `ipa` are in the target language.
+
+**`front` field — the word only:**
+- Vocabulary: just the target-language word (+ article for nouns). Nothing else — no English, no question.
+  - Noun: `die Küche` (article + word, so TTS reads the article too)
+  - Verb: `abfahren`
+  - Adjective: `schnell`
+  - Phrase/idiom: `Bescheid geben`
+- Grammar cards: a short English question. E.g. "Which case does **mit** take?"
+- Distinction cards: both words. E.g. "kennen vs. wissen"
+- The front is what TTS reads when the user taps 🔊 — keep it clean and pronounceable.
+
+**`answer` field (English):**
+- English definition(s), part of speech, register if notable
+- Nouns: article + plural. E.g. "kitchen. die Küche, pl. die Küchen"
+- Verbs: auxiliary (sein/haben) + past participle + irregularity. E.g. "to depart. ist abgefahren, separable, irregular (fährt ab)"
+- Grammar cards: clear English rule with German examples + translations
+
+**`example` field:**
+- A natural sentence in the target language, followed by English translation in parentheses.
+- E.g. "Der Zug fährt um 8 Uhr ab. (The train departs at 8 o'clock.)"
+- Calibrate complexity to the card's CEFR level.
+- The user can tap 🔊 on the example sentence separately to hear it spoken.
+
+**`ipa`:** always filled for every vocabulary card.
+
+**`note` field (English):** register (formal/colloquial/slang), false friends, common mistakes, grammar notes (separable verb, case it governs, etc.), related words.
+
+**Tags:** must include `lang::<code>` (e.g. `lang::de`, `lang::tr`), `level::<a1|a2|b1|b2|c1>`, and a topic tag (`topic::food`, `topic::grammar-cases`, etc.).
+
+**Near-synonyms:** always add a `distinction` card.
+
+#### Card types for language
+
+| Type tag | Front | When to use |
+|----------|-------|-------------|
+| `recall::vocab` | the word (+ article) | Every vocabulary word |
+| `recall::article-rule` | English question | Major suffix/category patterns (generate once, not per word) |
+| `recall::article-drill` | `der/die/das [noun]?` | Only for high-frequency nouns with surprising articles |
+| `recall::grammar-rule` | English question | Case rules, word order, tense formation |
+| `recall::grammar-pattern` | English question | Conjugation tables, declension (use `code` field for table layout) |
+| `recall::distinction` | `word A vs. word B` | Near-synonyms, easily confused pairs |
+| `recall::preposition` | the preposition | Which case it governs, with examples |
+| `recall::usage` | English question | Situational phrases (ordering food, at the doctor) |
+| `recall::word-formation` | the compound word | How compound nouns are built (B1+) |
+
+#### Level calibration
+
+| Level | Grammar focus | Example complexity |
+|-------|---------------|-------------------|
+| A1 | Präsens, Nom/Akk, sein/haben, modals, basic word order | Short sentences, present tense, ≤8 words |
+| A2 | Perfekt, Dativ, Wechselpräpositionen, Nebensatz (weil/dass) | Compound sentences, past tense |
+| B1 | Präteritum, Passiv, Konjunktiv II, relative clauses, Genitiv | Complex sentences, mixed tenses |
+| B2 | Konjunktiv I, Partizip as adjective, advanced connectors | Formal/informal contrast, nuance |
+| C1 | Nominalisierung, extended attributes, stylistic variation | Authentic text, subtle distinctions |
+
+#### Batch strategy for wordlists
+
+When given a large wordlist (e.g. 650 Goethe A1 words):
+- **40 words per batch** → ~50–70 cards. User specifies `batch:1`, `batch:2`, etc.
+- Article pattern rules (~12 cards): generate only in batch 1. Do not repeat.
+- Target ~1.5 cards per word on average. Simple nouns = 1 card; irregular verbs or synonym pairs = 2–3 cards.
+- Each batch becomes one deck: `Language::German::A1-batch-01` or themed (`Language::German::A1-food`).
 
 ### Finance
 - Every concept requires: concept + mechanics + `risk` (mandatory) + comparison cards.
@@ -93,6 +153,8 @@ The JSON structure:
       "audio": null,
       "application": "<real-world application description or null>",
       "application_url": "<URL or null>",
+      "prompts": ["Article?", "Plural?", "Auxiliary?"],
+      "cloze": "<sentence with ___ blanks or null>",
       "source": "<source label e.g. OSTEP ch28 §locks>",
       "source_text": "<1–3 verbatim sentences from the source file that ground this answer, or null if grounding::model>",
       "tags": ["recall::<type>", "diff::<1-5>", "grounding::source"]
@@ -112,8 +174,18 @@ The JSON structure:
 - `ipa`: IPA phonetic string (e.g. `/ˈmjuː.teks/`) or null.
 - `example`: natural example sentence or null.
 - `source`: source label + section identifier.
+- `prompts`: array of short recall-challenge strings shown below the word on the front side, or null. Language vocab cards should always have prompts tailored to the word type. Examples by word type:
+  - Noun: `["Article?", "Plural?", "Meaning?"]`
+  - Verb: `["Meaning?", "Auxiliary: sein/haben?", "Past participle?"]`
+  - Separable verb: `["Meaning?", "Separated form?", "Auxiliary?"]`
+  - Adjective: `["Meaning?", "Opposite?"]`
+  - Preposition: `["Which case?", "Meaning?"]`
+  - Add word-specific prompts when relevant: `"Irregular?"`, `"Register?"`, `"Reflexive?"`, `"Which verb pairs with this?"`
+- `cloze`: a sentence with `___` replacing the target word, or null. The app shows this as a fill-in-the-blank challenge. Use for vocab and grammar cards where testing in context adds value. E.g. `"Der Zug ___ um 8 Uhr ___."` for *abfahren*. Include the answer in the `answer` field.
 - `source_text`: verbatim 1–3 sentences from the source that contain the answer. Null only for `grounding::model` cards.
 - `tags`: always include `recall::<type>`, `diff::<1-5>`, and `grounding::source` or `grounding::model`. Add 1–2 domain content tags (e.g. `cs::concurrency`, `topic::mutex`, `lang::tr`).
+
+**Reverse cards (language only):** Do NOT generate separate reverse cards. The app automatically creates reverse reviews (English→German) from every language vocab card with independent FSRS scheduling. One card in the JSON = two review directions in the app.
 
 **Domain field for entire deck:**
 - CS topics → `"domain": "cs"`

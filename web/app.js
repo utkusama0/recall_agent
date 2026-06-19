@@ -217,8 +217,20 @@ function isDue(id, when = new Date()) {
 }
 function allCards() {
   const out = [];
-  for (const slug in S.decks)
-    for (const c of S.decks[slug].cards) out.push({ ...c, _slug: slug });
+  for (const slug in S.decks) {
+    const d = S.decks[slug];
+    for (const c of d.cards) {
+      out.push({ ...c, _slug: slug });
+      if (d.domain === "language" && !c.suspended) {
+        const revId = c.id + "~rev";
+        if (!S.scheduler[revId]) {
+          S.scheduler[revId] = dehydrate(createEmptyCard(new Date()));
+          S.schedulerDirty = true;
+        }
+        out.push({ ...c, _slug: slug, id: revId, _reverse: true, _origId: c.id });
+      }
+    }
+  }
   return out;
 }
 function dueQueue(filterSlug = null) {
@@ -409,6 +421,9 @@ function cardBodyHtml(c) {
     const exBtn = (langCard && c.example) ? `<button class="speak" data-speak="example" title="Pronounce sentence">🔊 sentence</button>` : "";
     html += `<div class="answer lang-row">${exHtml}${ipaHtml}${wordBtn}${exBtn}</div>`;
   }
+  if (c.cloze) {
+    html += `<div class="cloze"><b>Fill in:</b> ${DOMPurify.sanitize(c.cloze)}</div>`;
+  }
   if (c.note) html += `<div class="note"><b>💡 Note:</b> ${mdToHtml(c.note)}</div>`;
   if (c.application) {
     const illus = grounding === "grounding::model"
@@ -576,22 +591,53 @@ function viewReview() {
   showReviewCard();
 }
 
+function reverseCardBody(c) {
+  let html = `<div class="answer" style="font-size:20px;font-weight:600">${mdToHtml(c.front)}</div>`;
+  if (c.ipa) html += `<div class="ipa" style="margin-top:4px">/${DOMPurify.sanitize(c.ipa)}/</div>`;
+  const langCard = isLanguageCard(c);
+  if (langCard) {
+    html += `<div class="answer lang-row" style="margin-top:8px">
+      <button class="speak" data-speak="word" title="Pronounce word">🔊</button>
+      ${c.example ? `<button class="speak" data-speak="example" title="Pronounce sentence">🔊 sentence</button>` : ""}
+    </div>`;
+  }
+  if (c.example) html += `<div class="answer" style="margin-top:8px"><em>${mdToHtml(c.example)}</em></div>`;
+  if (c.note) html += `<div class="note"><b>💡 Note:</b> ${mdToHtml(c.note)}</div>`;
+  return html;
+}
+
 function showReviewCard() {
   const { queue, idx, revealed, deckOpts } = reviewState;
   const c = queue[idx];
+  const isRev = !!c._reverse;
   const remaining = queue.length - idx;
   const askLabel = tutorBtnLabel();
+
+  const frontContent = isRev
+    ? `<span class="muted" style="font-size:12px">🔄 Produce the German word</span><div style="margin-top:6px">${mdToHtml(c.answer)}</div>`
+    : `${mdToHtml(c.front)}${isLanguageCard(c) ? ` <button class="speak" id="frontSpeak" title="Pronounce">🔊</button>` : ""}`;
+
+  const promptsHtml = !isRev && c.prompts && c.prompts.length
+    ? `<div class="prompts muted" style="margin-top:8px;font-size:13px">${c.prompts.map(p => `<span class="prompt-tag">${DOMPurify.sanitize(p)}</span>`).join(" · ")}</div>`
+    : "";
+
+  const backContent = revealed
+    ? (isRev ? reverseCardBody(c) : cardBodyHtml(c))
+    : "";
+
   view.innerHTML = `
     <div style="margin-bottom:8px">
       <select id="deckFilter" style="width:100%">${deckOpts}</select></div>
     <div class="row" style="margin-bottom:6px">
       <span class="pill">${remaining} due</span>
+      ${isRev ? `<span class="pill" style="color:var(--accent);border-color:var(--accent2)">🔄 reverse</span>` : ""}
       <span class="grow"></span>
       <button class="ghost" id="suspendBtn">Suspend</button>
       <button class="ghost" id="editBtn">Edit</button></div>
     <div class="card">
-      <div class="front">${mdToHtml(c.front)}</div>
-      <div id="back" class="${revealed ? "" : "hidden"}">${revealed ? cardBodyHtml(c) : ""}</div>
+      <div class="front">${frontContent}</div>
+      ${promptsHtml}
+      <div id="back" class="${revealed ? "" : "hidden"}">${backContent}</div>
       ${revealed ? "" : `<div class="grades"><button class="primary" id="showBtn" style="grid-column:1/-1;min-height:44px">Show answer</button></div>`}
       ${revealed ? `<div class="grades">
         <button class="g-again" data-r="1">Again</button>
@@ -608,6 +654,8 @@ function showReviewCard() {
     viewReview();
   };
   renderMath($("#back"));
+  const frontSpeakBtn = $("#frontSpeak");
+  if (frontSpeakBtn) frontSpeakBtn.onclick = () => playPronunciation(c, "word");
   if (!revealed) {
     $("#showBtn").onclick = () => { reviewState.revealed = true; showReviewCard(); };
   } else {
@@ -617,8 +665,14 @@ function showReviewCard() {
     document.querySelectorAll("#back [data-speak]").forEach((b) =>
       b.onclick = () => playPronunciation(c, b.dataset.speak));
   }
-  $("#suspendBtn").onclick = () => { setSuspended(c, true); nextCard(); };
-  $("#editBtn").onclick = () => openEditor(c._slug, c.id);
+  const origId = c._origId || c.id;
+  const origSlug = c._slug;
+  $("#suspendBtn").onclick = () => {
+    const origCard = { ...c, id: origId, _slug: origSlug };
+    setSuspended(origCard, true);
+    nextCard();
+  };
+  $("#editBtn").onclick = () => openEditor(origSlug, origId);
 }
 
 function doGrade(c, r) {
