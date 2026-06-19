@@ -235,6 +235,19 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script>
+  // One-time SW + cache nuke. Remove this block after 2026-06-25.
+  if (!sessionStorage.getItem("sw_nuked")) {
+    sessionStorage.setItem("sw_nuked", "1");
+    caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).then(() => {
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          Promise.all(regs.map(r => r.unregister())).then(() => location.reload());
+        });
+      }
+    }).catch(() => {});
+  }
+  </script>
   <script type="module" src="app.js?v=16"></script>
 </body>
 </html>

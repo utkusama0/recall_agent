@@ -48,6 +48,7 @@ self.addEventListener("activate", (e) => {
 });
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
+  if (url.protocol !== "https:" && url.protocol !== "http:") return;
   if (url.hostname === "api.github.com" || url.hostname.includes("groq") ||
       url.hostname.includes("dictionaryapi")) return;
   // Local app files: network-first so deploys take effect immediately.
