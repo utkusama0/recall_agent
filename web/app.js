@@ -1,4 +1,4 @@
-﻿// RECALL PWA — repo-native, phone-first spaced-repetition reviewer.
+// RECALL PWA — repo-native, phone-first spaced-repetition reviewer.
 // FSRS runs in-browser (zero tokens). Cards + state live in the GitHub repo;
 // the app reads/writes them via the GitHub Contents API using a PAT kept only
 // in this device's localStorage. Offline-first via IndexedDB + a sync queue.
@@ -317,7 +317,9 @@ function renderMath(el) {
       renderMathInElement(el, {
         delimiters: [
           { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
           { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false },
         ],
         throwOnError: false,
       });
