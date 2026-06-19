@@ -1210,5 +1210,29 @@
     "lapses": 0,
     "state": 0,
     "last_review": null
+  },
+  "dea1-sample-001~rev": {
+    "due": "2026-06-19T15:08:42.269Z",
+    "stability": 0,
+    "difficulty": 0,
+    "elapsed_days": 0,
+    "scheduled_days": 0,
+    "learning_steps": 0,
+    "reps": 0,
+    "lapses": 0,
+    "state": 0,
+    "last_review": null
+  },
+  "dea1-sample-002~rev": {
+    "due": "2026-06-19T15:08:42.269Z",
+    "stability": 0,
+    "difficulty": 0,
+    "elapsed_days": 0,
+    "scheduled_days": 0,
+    "learning_steps": 0,
+    "reps": 0,
+    "lapses": 0,
+    "state": 0,
+    "last_review": null
   }
 }
