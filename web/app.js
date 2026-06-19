@@ -107,6 +107,14 @@ async function ghPutFile(path, text, sha, message) {
   return (await r.json()).content.sha;
 }
 
+async function ghDeleteFile(path, sha, message) {
+  const r = await fetch(`${ghBase()}/contents/${path}`, {
+    method: "DELETE", headers: { ...ghHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ message, sha, branch: SET.branch }),
+  });
+  if (!r.ok && r.status !== 404) throw new Error(`DELETE ${path}: ${r.status}`);
+}
+
 // ---------- in-memory state ----------
 const S = {
   config: null,
@@ -114,6 +122,7 @@ const S = {
   scheduler: {},      // id -> stored FSRS card
   pendingReviews: [], // jsonl lines to append to state/reviews.jsonl
   pendingTutor: [],   // jsonl lines to append to state/tutor_calls.jsonl
+  pendingDeletes: [], // slugs whose cards/<slug>.json should be deleted from GitHub
   dirtyDecks: new Set(),
   schedulerDirty: false,
   indexDirty: false,
@@ -124,6 +133,7 @@ async function persistLocal() {
   await idbSet("snapshot", {
     config: S.config, decks: S.decks, scheduler: S.scheduler,
     pendingReviews: S.pendingReviews, pendingTutor: S.pendingTutor,
+    pendingDeletes: S.pendingDeletes,
     dirtyDecks: [...S.dirtyDecks], schedulerDirty: S.schedulerDirty, indexDirty: S.indexDirty,
   });
 }
@@ -132,6 +142,7 @@ async function restoreLocal() {
   if (!snap) return false;
   S.config = snap.config; S.decks = snap.decks || {}; S.scheduler = snap.scheduler || {};
   S.pendingReviews = snap.pendingReviews || []; S.pendingTutor = snap.pendingTutor || [];
+  S.pendingDeletes = snap.pendingDeletes || [];
   S.dirtyDecks = new Set(snap.dirtyDecks || []); S.schedulerDirty = !!snap.schedulerDirty;
   S.indexDirty = !!snap.indexDirty;
   S.loaded = true;
@@ -554,6 +565,11 @@ async function sync() {
         cur.sha, "recall: update scheduler");
       S.schedulerDirty = false;
     }
+    for (const slug of [...S.pendingDeletes]) {
+      const cur = await ghGetFile(`cards/${slug}.json`);
+      if (cur.sha) await ghDeleteFile(`cards/${slug}.json`, cur.sha, `recall: delete ${slug}`);
+      S.pendingDeletes = S.pendingDeletes.filter((s) => s !== slug);
+    }
     if (S.pendingReviews.length) { await appendLog("state/reviews.jsonl", S.pendingReviews); S.pendingReviews = []; }
     if (S.pendingTutor.length) { await appendLog("state/tutor_calls.jsonl", S.pendingTutor); S.pendingTutor = []; }
     await persistLocal();
@@ -566,7 +582,7 @@ async function sync() {
 
 function pendingCount() {
   return S.dirtyDecks.size + (S.schedulerDirty ? 1 : 0) + (S.indexDirty ? 1 : 0)
-    + S.pendingReviews.length + S.pendingTutor.length;
+    + S.pendingReviews.length + S.pendingTutor.length + S.pendingDeletes.length;
 }
 function updatePill() {
   const pill = $("#syncPill");
@@ -836,7 +852,12 @@ function viewBrowse() {
           <span class="deck-name">${DOMPurify.sanitize(d.deck)}</span>
           <span class="deck-meta"><span class="pill">${d.cards.length}</span><span class="pill ${due ? "" : "ok"}">${due} due</span></span>
         </summary>
-        <div class="deck-cards">${cardsHtml}</div>
+        <div class="deck-cards">
+          ${cardsHtml}
+          <div class="row end" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+            <button class="ghost btn-sm" style="color:var(--bad)" data-del-deck="${s}">Delete deck</button>
+          </div>
+        </div>
       </details>`;
     }).join("");
     return `<details class="domain-group" open>
@@ -859,6 +880,36 @@ function viewBrowse() {
   document.querySelectorAll("[data-edit]").forEach((b) => b.onclick = () => {
     const [slug, id] = b.dataset.edit.split("|"); openEditor(slug, id);
   });
+  document.querySelectorAll("[data-del-deck]").forEach((b) => {
+    b.onclick = (e) => { e.stopPropagation(); confirmDeleteDeck(b.dataset.delDeck); };
+  });
+}
+
+function confirmDeleteDeck(slug) {
+  const d = S.decks[slug];
+  if (!d) return;
+  const n = d.cards.length;
+  const el = document.querySelector(`[data-del-deck="${slug}"]`);
+  if (el && !el.dataset.confirmed) {
+    el.dataset.confirmed = "1";
+    el.textContent = `Delete ${n} cards? Tap again`;
+    el.style.fontWeight = "700";
+    setTimeout(() => { if (el) { delete el.dataset.confirmed; el.textContent = "Delete deck"; el.style.fontWeight = ""; } }, 4000);
+    return;
+  }
+  // Remove scheduler entries for all cards (including reverse)
+  for (const c of d.cards) {
+    delete S.scheduler[c.id];
+    delete S.scheduler[c.id + "~rev"];
+  }
+  S.schedulerDirty = true;
+  S.pendingDeletes.push(slug);
+  S.dirtyDecks.delete(slug);
+  delete S.decks[slug];
+  S.indexDirty = true;
+  persistLocal(); syncSoon();
+  toast(`Deleted "${d.deck}"`);
+  render();
 }
 
 function newDeckDialog() {
