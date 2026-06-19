@@ -1,0 +1,346 @@
+{
+  "deck": "CS::CS4074::utm-counters",
+  "domain": "cs",
+  "cards": [
+    {
+      "id": "cs-cs4074-utm-counters-001",
+      "front": "What is the minimum number of counters needed to simulate any Turing machine, and what is the key theorem?",
+      "answer": "Two counters are sufficient. Any TM can be simulated by a 2-counter machine.",
+      "note": "The chain is: TM → 2-stack machine → 2-counter machine (simulating one stack) → 2 counters simulate K counters via prime encoding. The final collapse to 2 closes the entire equivalence.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-002",
+      "front": "In the 2-counter simulation of K counters, how is the joint state of all K virtual counters encoded into C1?",
+      "answer": "Using Gödel numbering: m = p₁^n₁ · p₂^n₂ · … · pK^nK, where pₖ is the kth prime and nₖ is the value of virtual counter k. The integer m is stored as tally marks in C1.",
+      "note": "Uniqueness is guaranteed by the Fundamental Theorem of Arithmetic — every positive integer has a unique prime factorization.",
+      "code": null,
+      "math": "m = p_1^{n_1} \\cdot p_2^{n_2} \\cdot \\ldots \\cdot p_K^{n_K}",
+      "ipa": null,
+      "example": "n₁=2, n₂=1, n₃=0 with primes 2,3,5 → m = 2²·3¹·5⁰ = 12",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-003",
+      "front": "What does incrementing virtual counter k correspond to arithmetically on C1?",
+      "answer": "Multiplying C1 by pₖ. This increases the exponent of pₖ in the Gödel number by 1, representing nₖ → nₖ + 1.",
+      "note": "Mechanically: dump all of C1 into C2, then for every 1 popped from C2 push pₖ 1s back into C1. A modulo-pₖ clock in the FSM counts each full revolution as one unit transferred.",
+      "code": null,
+      "math": "m \\to m \\cdot p_k",
+      "ipa": null,
+      "example": "C1=12, increment counter 1 (p=2): dump C1 into C2, push back 2× per unit → C1=24",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-004",
+      "front": "What does decrementing virtual counter k correspond to arithmetically on C1?",
+      "answer": "Dividing C1 by pₖ. This decreases the exponent of pₖ in the Gödel number by 1, representing nₖ → nₖ − 1.",
+      "note": "Mechanically: dump C1 into C2, then for every pₖ pops from C2 push 1 into C1. One full revolution of the modulo-pₖ clock = pₖ pops from C2 = 1 push to C1.",
+      "code": null,
+      "math": "m \\to m \\div p_k",
+      "ipa": null,
+      "example": "C1=24, decrement counter 2 (p=3): dump to C2, push 1 per 3 pops → C1=8",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-005",
+      "front": "How do you test whether virtual counter k equals zero using the 2-counter encoding?",
+      "answer": "Attempt to divide C1 by pₖ using the modulo-pₖ clock. If C2 empties exactly when the clock completes (no remainder), the counter is 0. Otherwise it is nonzero — restore C1 using multiplication.",
+      "note": "This is a divisibility test: nₖ = 0 iff pₖ does not appear in the factorization of m, i.e. pₖ does not divide m.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-006",
+      "front": "What role does the modulo-pₖ clock play in the 2-counter simulation of K counters?",
+      "answer": "It is encoded in the FSM state and counts when exactly pₖ pops/pushes have occurred. One full clock revolution = one unit of multiply or divide by pₖ on C1.",
+      "note": "The clock has pₖ positions (0 through pₖ−1). It ticks with each pop from C2 and wraps around after pₖ ticks, signalling one complete group.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": "For p₂=3: clock cycles 0→1→2→0, and each full cycle (0→0) corresponds to transferring one unit between C1 and C2 in the divide-by-3 direction.",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-007",
+      "front": "What is the Universal Turing Machine (UTM) and what problem does it solve?",
+      "answer": "The UTM U is a single fixed TM that can simulate any TM M on any input w. It takes ⟨M⟩⟨w⟩ as input and behaves exactly as M would on w, including looping if M loops.",
+      "note": "Without a UTM, every computation would require a custom-built machine. The UTM embodies the stored-program idea: the program ⟨M⟩ is just data on the tape.",
+      "code": null,
+      "math": "U(\\langle M \\rangle \\langle w \\rangle) = \\langle M(w) \\rangle",
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 8; Lewis & Papadimitriou Ch. 5",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-008",
+      "front": "What are the three tapes of the UTM and what does each hold?",
+      "answer": "Tape 1: the simulated tape of M (encoded cells, with $ marking the head position). Tape 2: the encoded transition table of M, ⟨M⟩, read-only. Tape 3: the encoded current state of M, updated each simulated step.",
+      "note": "Tapes 1 and 3 together give M's full configuration at any point. Tape 2 is the program/ROM that never changes.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": "Tape 1: # [enc. cells] … $ [head symbol] … # | Tape 2: # (q₁,a₁,q'₁,act₁)…(qₙ,aₙ,q'ₙ,actₙ) # | Tape 3: # [enc(q)] #",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 8; Lewis & Papadimitriou Ch. 5",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-009",
+      "front": "What is the role of the $ marker on Tape 1 of the UTM?",
+      "answer": "$ marks the current head position of the simulated machine M. It sits just left of the encoded symbol M is currently reading. Moving the head in the simulation = shifting $ one encoded-symbol left or right on Tape 1.",
+      "note": "Since each symbol is encoded as a fixed-length binary string, shifting $ by one encoded-symbol width correctly tracks head movement.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 8",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-010",
+      "front": "What is the SD (State Detection) sub-machine of the UTM and what are its three outcomes?",
+      "answer": "SD compares Tape 3 (current state encoding) bit-by-bit against the first field of each row in Tape 2. Outcomes: (1) full match → pass to ID; (2) mismatch → skip this row, rewind Tape 3, try next row; (3) Tape 2 ends with no match → simulated state is a halt state, UTM halts.",
+      "note": "SD scans Tape 2 linearly from left to right. It may inspect every row before finding the match or concluding halt.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 9",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-011",
+      "front": "What is the ID (Input Detection) sub-machine of the UTM and what are its three outcomes?",
+      "answer": "ID compares the second field of the currently matched row in Tape 2 against the encoded symbol under M's head (read from Tape 1 at the $ position). Outcomes: (1) full match → pass to S' to apply the transition; (2) mismatch → skip this row, restart SD for the next row; (3) Tape 2 ends → exception (misencoded table).",
+      "note": "ID runs after SD has confirmed a state match. Together SD+ID locate the unique rule for the pair (q, a).",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 9",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-012",
+      "front": "What does the S' (apply transition) sub-machine of the UTM do?",
+      "answer": "S' reads the 3rd field of the matched row (encoded q') and writes it to Tape 3, updating M's state. It then reads the 4th field (action): if a symbol, write it to Tape 1 at $; if move-right, shift $ rightward one encoded-symbol; if move-left, shift $ leftward.",
+      "note": "After S' completes, all tape heads are reset to their ready positions and the simulation loop restarts for the next step.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slides 9–10",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-013",
+      "front": "How is a DTM M encoded as the binary string ⟨M⟩ placed on Tape 2 of the UTM?",
+      "answer": "States are integers: 1=halt_YES, 2=halt_NO, 3=initial, then 4,5,… in BFS order through δ. Symbols: 3=#, 4=0, 5=1. Actions: 1=left, 2=right, 3/4/5=print #/0/1. Each row of δ is encoded as 1 0^i₁ 1 0^i₂ 1 0^i₃ 1 0^i₄ 1. All rows concatenated = ⟨M⟩.",
+      "note": "The separator 1s mark field boundaries; the count of 0s gives the integer value. This produces a valid binary string in L_DTM.",
+      "code": null,
+      "math": "\\text{row: } 1\\, 0^{i_1}\\, 1\\, 0^{i_2}\\, 1\\, 0^{i_3}\\, 1\\, 0^{i_4}\\, 1",
+      "ipa": null,
+      "example": "State 3 reading symbol 4 → state 5, move right (2): encoded as 1 000 1 0000 1 00000 1 00 1",
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slides 8, 12; CS4075 slide 3",
+      "source_text": null,
+      "tags": [
+        "recall::procedure",
+        "diff::3",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-014",
+      "front": "What is the steady-state head position convention for the UTM between simulated steps?",
+      "answer": "Tape 2 and Tape 3 heads rest at their leftmost positions. Tape 1 head sits under the $ marker, i.e. scanning the encoded symbol that M's head is currently reading.",
+      "note": "This is the 'ready position' from which SD, ID, and S' always begin their respective scans.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 8",
+      "source_text": null,
+      "tags": [
+        "recall::definition",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-015",
+      "front": "Why does the UTM halt when SD fails to find a matching state row in Tape 2?",
+      "answer": "Because the only states absent from the transition table are halting states (halt_YES, halt_NO). A missing match means M has entered a halt state, so the simulation correctly terminates.",
+      "note": "This is by design: halting states have no outgoing transitions, so they produce no rows in ⟨M⟩.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slide 9; Lewis & Papadimitriou Ch. 5",
+      "source_text": null,
+      "tags": [
+        "recall::why",
+        "diff::2",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-016",
+      "front": "What is the philosophical significance of the UTM in the context of computation theory?",
+      "answer": "The UTM shows that a program and its data can both live on the same tape — the program ⟨M⟩ is just a string. This is the theoretical basis of the stored-program computer. It also enables the Halting Problem: since U can simulate any M on any w, the question 'does M halt on w?' becomes a question about U's own behavior.",
+      "note": "Turing proposed this in 1936 — over a decade before physical stored-program computers were built.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074; Lewis & Papadimitriou Ch. 5",
+      "source_text": null,
+      "tags": [
+        "recall::why",
+        "diff::1",
+        "grounding::source"
+      ]
+    },
+    {
+      "id": "cs-cs4074-utm-counters-017",
+      "front": "What is the complete simulation chain proving TM ≡ 2-counter machine?",
+      "answer": "TM → (Fact 1) 2-stack machine → (Fact 2) 2 counters per stack + modulo-r clocks → (Prime encoding) K counters → 2 counters via Gödel numbering. Therefore any TM ≡ a machine with exactly 2 counters.",
+      "note": "Each arrow is proved by showing mutual simulation. The two-counter result is striking because counters can only increment, decrement, and test-zero — yet this is Turing-complete.",
+      "code": null,
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "source": "CS4074 slides 2–6",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source"
+      ]
+    }
+  ]
+}
