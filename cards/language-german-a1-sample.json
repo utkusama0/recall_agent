@@ -1,0 +1,65 @@
+{
+  "deck": "Language::German::A1-sample",
+  "domain": "language",
+  "cards": [
+    {
+      "id": "dea1-sample-001",
+      "front": "die Wohnung",
+      "answer": "Apartment / flat. Feminine noun (die). Plural: die Wohnungen (add -en).\nDerived from the verb 'wohnen' (to live/reside) — the '-ung' suffix turns a verb into a noun.\nPattern: '-ung' nouns are ALWAYS feminine in German. No exceptions.",
+      "note": "'-ung = -tion' pattern: Wohnung (dwelling), Übung (exercise), Zeitung (newspaper). All feminine. Wohnung ← wohnen, just like 'habitation' ← 'inhabit'.",
+      "code": null,
+      "math": null,
+      "ipa": "/ˈvoːnʊŋ/",
+      "example": "Seit wann haben Sie diese Wohnung? (How long have you had this apartment?)",
+      "audio": null,
+      "application": "Essential when flat-hunting in Germany — Wohnungssuche (apartment search), Mietvertrag (rental contract).",
+      "application_url": null,
+      "prompts": [
+        "Meaning?",
+        "Article?",
+        "Plural?",
+        "Gender rule?",
+        "Related verb?"
+      ],
+      "cloze": "Unsere ___ hat drei Zimmer. (Our ___ has three rooms.)",
+      "source": "Goethe A1 Wortliste",
+      "source_text": null,
+      "tags": [
+        "recall::vocab",
+        "diff::1",
+        "grounding::source",
+        "lang::de",
+        "topic::home"
+      ]
+    },
+    {
+      "id": "dea1-sample-002",
+      "front": "einkaufen",
+      "answer": "To go shopping / to shop. Separable: ein|kaufen.\nPresent: 'Ich kaufe ein.' Auxiliary: haben. Past participle: eingekauft.\nBase verb 'kaufen' = to buy; prefix 'ein-' adds the sense of 'stocking up / shopping for supplies'.",
+      "note": "'ein-' = in/into. einkaufen = buy in(to your home). Same family: einladen (invite in), einsteigen (step in). Past participle stays together: eingekauft.",
+      "code": null,
+      "math": null,
+      "ipa": "/ˈaɪ̯nˌkaʊ̯fən/",
+      "example": "Ich gehe gerne einkaufen. (I like going shopping.)",
+      "audio": null,
+      "application": "Useful at the supermarket and when making plans: 'Ich muss noch einkaufen.' (I still need to go shopping.)",
+      "application_url": null,
+      "prompts": [
+        "Meaning?",
+        "Prefix?",
+        "Separated form?",
+        "Auxiliary?"
+      ],
+      "cloze": "Wir ___ jeden Samstag im Supermarkt ___. (We ___ at the supermarket every Saturday.)",
+      "source": "Goethe A1 Wortliste",
+      "source_text": null,
+      "tags": [
+        "recall::vocab",
+        "diff::2",
+        "grounding::source",
+        "lang::de",
+        "topic::shopping"
+      ]
+    }
+  ]
+}
