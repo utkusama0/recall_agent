@@ -1,0 +1,167 @@
+{
+  "deck": "CS::Python::Fred-Baptiste::05-Break-Continue-Try",
+  "domain": "cs",
+  "cards": [
+    {
+      "id": "python-try-loop-001",
+      "front": "In a try/except/finally block, when does the `finally` clause run?",
+      "answer": "Always — regardless of whether an exception was raised, caught, or not raised at all.\nIt runs even if a `return`, `break`, or `continue` statement is encountered inside the `try` or `except` block.",
+      "note": "Think of `finally` as an unconditional cleanup guarantee. The Python runtime defers the control-flow transfer (break/continue/return) until after `finally` completes.",
+      "code": "a, b = 10, 1\ntry:\n    a / b\nexcept ZeroDivisionError:\n    print('division by 0')\nfinally:\n    print('this always executes')  # prints even when no exception\n\na, b = 10, 0\ntry:\n    a / b\nexcept ZeroDivisionError:\n    print('division by 0')          # prints\nfinally:\n    print('this always executes')   # also prints",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": "Resource cleanup: closing a file or DB connection in `finally` ensures it happens even if an error occurs mid-operation.",
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "Recall that in a try statement, the finally clause always runs.",
+      "tags": [
+        "recall::definition",
+        "diff::2",
+        "grounding::source",
+        "cs::python-exceptions"
+      ]
+    },
+    {
+      "id": "python-try-loop-002",
+      "front": "What is the execution order when `continue` is hit inside a `try` block that has a `finally` clause?",
+      "answer": "`finally` runs first, then the loop continues to the next iteration — the `continue` does NOT skip `finally`.\nOrder: try body → exception handler (if needed) → `continue` encountered → `finally` executes → next iteration begins.",
+      "note": "Common misconception: `continue` skips 'the rest of the block', so people assume it skips `finally` too. It doesn't — `finally` is a deferred guarantee, not part of the normal flow path.",
+      "code": "a, b = 0, 2\nwhile a < 3:\n    a += 1; b -= 1\n    try:\n        res = a / b\n    except ZeroDivisionError:\n        res = 0\n        continue          # triggers continue\n    finally:\n        print(f'{a},{b} - always executes')  # STILL runs before next iteration\n    print(f'{a},{b} - main loop')            # skipped when continue fires",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "As you can see in the above result, the finally code still executed, even though the current iteration was cut short with the continue statement.",
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source",
+        "cs::python-exceptions"
+      ]
+    },
+    {
+      "id": "python-try-loop-003",
+      "front": "What is the execution order when `break` is hit inside a `try` block that has a `finally` clause?",
+      "answer": "`finally` still runs before the loop exits — `break` does NOT skip `finally`.\nOrder: try body → exception handler (if needed) → `break` encountered → `finally` executes → loop terminates.",
+      "note": "`break` and `continue` behave identically with respect to `finally`: both defer their control transfer until after `finally` completes. The only difference is what happens after: next iteration vs. loop exit.",
+      "code": "a, b = 0, 2\nwhile a < 3:\n    a += 1; b -= 1\n    try:\n        res = a / b\n    except ZeroDivisionError:\n        res = 0\n        break             # triggers break\n    finally:\n        print(f'{a},{b} - always executes')  # runs before loop exits\n    print(f'{a},{b} - main loop')            # skipped\n# loop terminates after finally",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "This works the same with a break statement.",
+      "tags": [
+        "recall::mechanism",
+        "diff::3",
+        "grounding::source",
+        "cs::python-exceptions"
+      ]
+    },
+    {
+      "id": "python-try-loop-004",
+      "front": "`continue` vs. `break` inside a try/finally — how do they differ in their effect on the loop, and what do they share?",
+      "answer": "Both cause `finally` to execute before transferring control — that behaviour is shared.\nDifference: `continue` skips the rest of the current iteration and moves to the next; `break` exits the loop entirely.",
+      "note": "Neither can suppress `finally`. If you need conditional cleanup, put the condition inside `finally` itself.",
+      "code": "# continue — finally runs, loop keeps going\nexcept SomeError:\n    continue\nfinally:\n    cleanup()   # runs, then next iteration\n\n# break — finally runs, loop stops\nexcept SomeError:\n    break\nfinally:\n    cleanup()   # runs, then loop exits",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "This works the same with a break statement.",
+      "tags": [
+        "recall::distinction",
+        "diff::3",
+        "grounding::source",
+        "cs::python-exceptions"
+      ]
+    },
+    {
+      "id": "python-try-loop-005",
+      "front": "When does the `else` clause of a `while` loop execute, and how does `break` affect it?",
+      "answer": "The `else` clause runs only when the loop condition becomes False naturally (exhausted iterations).\nIf the loop exits via `break`, the `else` clause is skipped entirely.",
+      "note": "This makes `else` a clean way to signal 'loop completed without early exit' — commonly used to detect whether a search succeeded or a loop ran cleanly.",
+      "code": "# break fires → else skipped\nwhile a < 3:\n    ...\n    break\nelse:\n    print('no errors!')   # NOT printed\n\n# loop exhausted → else runs\nwhile a < 3:\n    a += 1\nelse:\n    print('no errors!')   # printed",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": "Search loops: `for item in collection: if found: break` + `else: handle_not_found()` — `else` only runs when the item was never found.",
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "We can even combine all this with the else clause.",
+      "tags": [
+        "recall::edge-case",
+        "diff::3",
+        "grounding::source",
+        "cs::python-control-flow"
+      ]
+    },
+    {
+      "id": "python-try-loop-006",
+      "front": "Trace the full output of this loop (a=0, b=2, limit a<3): try a/b, except ZeroDivisionError → continue, finally always prints. What prints and in what order?",
+      "answer": "Iteration 1 (a=1, b=1): no exception → finally prints → main loop line prints.\nIteration 2 (a=2, b=0): ZeroDivisionError → except prints → continue encountered → finally still prints → main loop line SKIPPED → next iteration.\nIteration 3 (a=3, b=-1): no exception → finally prints → main loop line prints.\nLoop ends (a<3 false).",
+      "note": "The key insight: on iteration 2, 'division by 0' and 'always executes' both print, but 'main loop' does NOT — because `continue` transfers after `finally` before reaching that line.",
+      "code": "# Expected output:\n# -------------\n# 1, 1 - always executes\n# 1, 1 - main loop\n# -------------\n# 2, 0 - division by 0\n# 2, 0 - always executes\n# -------------\n# 3, -1 - always executes\n# 3, -1 - main loop",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": "the finally code still executed, even though the current iteration was cut short with the continue statement.",
+      "tags": [
+        "recall::trace",
+        "diff::4",
+        "grounding::source",
+        "cs::python-exceptions"
+      ]
+    },
+    {
+      "id": "python-try-loop-007",
+      "front": "What is the gotcha if you put a `return` (or `break`) inside `finally` itself?",
+      "answer": "A `return` or `break` inside `finally` suppresses any exception that was propagating — the exception is silently swallowed.\nIt also overrides any `return` value set in the `try` block, which is almost never intended.",
+      "note": "The source doesn't cover this explicitly, but it is the single most dangerous misuse of `finally`. Rule: never use `return`/`break`/`continue` inside a `finally` block.",
+      "code": "def risky():\n    try:\n        raise ValueError('oops')\n    finally:\n        return 42   # exception swallowed! returns 42 silently\n\nrisky()  # returns 42, ValueError is gone",
+      "math": null,
+      "ipa": null,
+      "example": null,
+      "audio": null,
+      "application": null,
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Fred Baptiste Python Course · Notebook 05 – Break, Continue and the Try Statement",
+      "source_text": null,
+      "tags": [
+        "recall::failure-mode",
+        "diff::5",
+        "grounding::model",
+        "cs::python-exceptions"
+      ]
+    }
+  ]
+}
