@@ -19,11 +19,33 @@ description: Generates RECALL flashcards for computer science topics — algorit
 
 ## CARD RULES
 
-**Atomic:** One card = one fact. Split cards that test two things.
-
 **Crux-targeted:** Prefer "why" over "what". No word-spotting or definition-lookup cards unless the term is genuinely domain-critical.
 
-**Dense:** A 10-page chapter = 30–80 cards minimum. Every fact, mechanism, edge case, procedure gets its own card.
+### Principle consolidation — mandatory for all sources
+
+Do NOT emit one card per fact. Follow this 4-step process:
+
+**Step 1 — Fact extraction.** List EVERY distinct fact, rule, trap, and exception from the source as a numbered flat list. Skip nothing. This list is internal — do not output it.
+
+**Step 2 — Principle grouping.** For each pair of facts, apply this test: "If I know fact A, do I automatically know fact B?" If yes → same principle, merge into one card. If no → separate cards.
+
+Merge rules:
+- Multiple types/contexts obeying the same rule → one card, show 2-3 examples in `code`
+- "Feature X works in context Y" + "Feature X works in context Z" → one card covering the general rule
+- A fact derivable from another fact → fold into the parent card's `answer` or `note`
+
+Keep separate:
+- An EXCEPTION to a rule → always its own card
+- A TRAP / GOTCHA that would cause a bug → always its own card
+- A fact with its own proof, complexity bound, or failure mode → its own card
+
+**Step 3 — Card generation.** For each principle group:
+- `front`: tests the underlying rule, not a specific instance
+- `answer`: covers the full principle with enough detail to derive all grouped facts
+- `code`: 2-3 representative examples (not all instances)
+- `note`: flags the most common mistake or surprising behavior, if any
+
+**Step 4 — Coverage check.** Walk through the Step 1 fact list. For each fact, verify it appears in at least one card's `answer`, `code`, or `note`. If any fact is orphaned, add a card. Never skip this step.
 
 ---
 
