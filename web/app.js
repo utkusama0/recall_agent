@@ -849,7 +849,6 @@ function askUI(card) {
 
   q("#tutorSend").onclick = send;
   const ta = q("#tutorQ");
-  ta.focus();
   ta.onkeydown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   };
