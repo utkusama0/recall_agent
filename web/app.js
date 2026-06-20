@@ -604,6 +604,7 @@ function renderTabs() {
 }
 
 function render() {
+  if (window._closeTutor) { window._closeTutor(); window._closeTutor = null; }
   renderTabs();
   updatePill();
   if (!S.loaded && (!SET.owner || !SET.pat)) { activeTab = "settings"; renderTabs(); return viewSettings(); }
@@ -694,8 +695,7 @@ function showReviewCard() {
         <button class="g-good" data-r="3">Good</button>
         <button class="g-easy" data-r="4">Easy</button></div>
         <div class="row" style="margin-top:10px">
-          <button class="ghost" id="askBtn">${askLabel}</button></div>
-        <div id="tutorOut"></div>` : ""}
+          <button class="ghost" id="askBtn">${askLabel}</button></div>` : ""}
     </div>`;
 
   $("#deckFilter").onchange = (e) => {
@@ -710,7 +710,7 @@ function showReviewCard() {
   } else {
     document.querySelectorAll(".grades button[data-r]").forEach((b) =>
       b.onclick = () => doGrade(c, Number(b.dataset.r)));
-    $("#askBtn").onclick = () => askUI(c, $("#tutorOut"));
+    $("#askBtn").onclick = () => askUI(c);
     document.querySelectorAll("#back [data-speak]").forEach((b) =>
       b.onclick = () => playPronunciation(c, b.dataset.speak));
   }
@@ -725,6 +725,7 @@ function showReviewCard() {
 }
 
 function doGrade(c, r) {
+  if (window._closeTutor) { window._closeTutor(); window._closeTutor = null; }
   gradeCard(c.id, r);
   persistLocal(); syncSoon();
   updateBadge();
@@ -743,40 +744,61 @@ function setSuspended(c, val) {
   persistLocal(); syncSoon();
 }
 
-// --- Ask UI (tutor chat) ---
-// Multi-turn: the thread scrolls inside its own fixed-height box so the page
-// doesn't grow, and follow-up questions keep the full conversation context.
-function askUI(card, outEl) {
+// --- Ask UI (tutor chat) — fullscreen overlay ---
+function askUI(card) {
+  if (window._closeTutor) window._closeTutor();
+
   const models = S.config?.tutor?.models || [{ id: "groq/llama-3.3-70b-versatile", label: "Llama 3.3 70B (free)" }];
   const fallback = S.config?.tutor?.default_model || models[0].id;
   let selectedModel = SET.model || fallback;
-  // Heal stale/removed selections (e.g. an old Claude model still in localStorage).
   if (!models.some((m) => m.id === selectedModel)) { selectedModel = fallback; SET.set("tutor_model", selectedModel); }
-  const convo = [];      // [{ role:"user"|"assistant", content }]
+  const convo = [];
   let busy = false;
 
-  outEl.innerHTML = `
-    <div class="card tutor-card">
-      <div class="row" style="gap:6px;margin-bottom:8px">
-        <span class="muted" style="font-size:12px">💬 Tutor chat</span>
-        <span class="grow"></span>
-        <button class="ghost btn-sm" id="modelToggle">⚙ ${models.find(m=>m.id===selectedModel)?.label || selectedModel}</button>
-        <button class="ghost btn-sm" id="chatClear" title="Clear conversation">🗑</button>
+  const overlay = document.createElement("div");
+  overlay.className = "tutor-overlay";
+  overlay.innerHTML = `
+    <div class="tutor-overlay-header">
+      <div class="tutor-context">
+        <div class="tutor-context-front">${DOMPurify.sanitize(card.front)}</div>
+        <div class="tutor-context-answer">${DOMPurify.sanitize((card.answer || "").split("\n")[0])}</div>
       </div>
-      <div id="modelSel" class="hidden" style="margin-bottom:8px">
-        <select id="askModel">${models.map((m) =>
-          `<option value="${m.id}" ${m.id === selectedModel ? "selected" : ""}>${m.label}</option>`).join("")}</select>
-      </div>
-      <div id="chatThread" class="chat-thread"></div>
-      <div class="chat-input">
-        <textarea id="askQ" placeholder="Ask about this card… (Enter to send)" rows="1"></textarea>
-        <button class="primary" id="askGo">Send</button>
-      </div>
+      <button class="ghost btn-sm" id="tutorClose" style="font-size:20px;padding:4px 8px">✕</button>
+    </div>
+    <div class="tutor-controls">
+      <span class="muted" style="font-size:12px">💬 Tutor</span>
+      <span class="grow"></span>
+      <button class="ghost btn-sm" id="tutorModelToggle">⚙ ${models.find(m=>m.id===selectedModel)?.label || selectedModel}</button>
+      <button class="ghost btn-sm" id="tutorClear" title="Clear conversation">🗑</button>
+    </div>
+    <div id="tutorModelSel" class="hidden" style="padding:4px 14px">
+      <select id="tutorModelSelect">${models.map((m) =>
+        `<option value="${m.id}" ${m.id === selectedModel ? "selected" : ""}>${m.label}</option>`).join("")}</select>
+    </div>
+    <div class="tutor-thread" id="tutorThread"></div>
+    <div class="tutor-input">
+      <textarea id="tutorQ" placeholder="Ask about this card… (Enter to send)" rows="1"></textarea>
+      <button class="primary" id="tutorSend">Send</button>
     </div>`;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
 
-  const thread = $("#chatThread");
+  const q = (sel) => overlay.querySelector(sel);
+  const thread = q("#tutorThread");
 
-  function renderThread() {
+  function closeTutor() {
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", escHandler);
+    window._closeTutor = null;
+  }
+  window._closeTutor = closeTutor;
+
+  function escHandler(e) {
+    if (e.key === "Escape") closeTutor();
+  }
+
+  function renderThread(scrollToLastUser = true) {
     if (!convo.length) {
       thread.innerHTML = `<p class="muted" style="font-size:13px;margin:4px 2px">Ask a question to start. Follow-ups keep the context.</p>`;
       return;
@@ -787,40 +809,47 @@ function askUI(card, outEl) {
         : `<div class="msg msg-bot">${mdToHtml(m.content)}</div>`
     ).join("");
     renderMath(thread);
-    thread.scrollTop = thread.scrollHeight;
+    if (scrollToLastUser) {
+      const userMsgs = thread.querySelectorAll(".msg-user");
+      const last = userMsgs[userMsgs.length - 1];
+      if (last) last.scrollIntoView({ block: "start", behavior: "smooth" });
+    } else {
+      thread.scrollTop = thread.scrollHeight;
+    }
   }
   renderThread();
 
-  $("#modelToggle").onclick = () => $("#modelSel").classList.toggle("hidden");
-  $("#askModel").onchange = (e) => {
+  q("#tutorClose").onclick = closeTutor;
+  document.addEventListener("keydown", escHandler);
+
+  q("#tutorModelToggle").onclick = () => q("#tutorModelSel").classList.toggle("hidden");
+  q("#tutorModelSelect").onchange = (e) => {
     selectedModel = e.target.value;
     SET.set("tutor_model", selectedModel);
-    $("#modelToggle").textContent = `⚙ ${models.find(m=>m.id===selectedModel)?.label || selectedModel}`;
+    q("#tutorModelToggle").textContent = `⚙ ${models.find(m=>m.id===selectedModel)?.label || selectedModel}`;
   };
-  $("#chatClear").onclick = () => { convo.length = 0; renderThread(); $("#askQ").focus(); };
+  q("#tutorClear").onclick = () => { convo.length = 0; renderThread(); q("#tutorQ").focus(); };
 
   async function send() {
     if (busy) return;
-    const qv = $("#askQ").value.trim(); if (!qv) return;
-    $("#askQ").value = "";
+    const qv = q("#tutorQ").value.trim(); if (!qv) return;
+    q("#tutorQ").value = "";
     convo.push({ role: "user", content: qv });
     convo.push({ role: "assistant", content: "⏳ …" });
-    busy = true; renderThread();
+    busy = true; renderThread(false);
     try {
-      // Strip error messages from history before sending — they poison context
       const clean = convo.slice(0, -1).filter((m) => !m._error);
       const ans = await askTutor(card, clean, selectedModel);
       convo[convo.length - 1] = { role: "assistant", content: ans };
     } catch (e) {
       convo[convo.length - 1] = { role: "assistant", content: "⚠ " + e.message, _error: true };
     }
-    busy = false; renderThread();
+    busy = false; renderThread(true);
   }
 
-  $("#askGo").onclick = send;
-  const ta = $("#askQ");
+  q("#tutorSend").onclick = send;
+  const ta = q("#tutorQ");
   ta.focus();
-  // Enter sends; Shift+Enter makes a newline. Auto-grow up to a few rows.
   ta.onkeydown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   };

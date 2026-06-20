@@ -93,11 +93,42 @@
       margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--warn);
       background: var(--panel2); border-radius: 8px; color: #d7c89a; font-size: 15px; line-height: 1.5;
     }
-    .tutor-card { background: var(--panel2); border-color: var(--accent2); margin-top: 8px; }
-    .tutor-ans {
-      margin-top: 10px; padding: 10px 14px; border-left: 3px solid var(--accent2);
-      background: var(--panel); border-radius: 8px; color: var(--fg); font-size: 15px; line-height: 1.6;
+    .tutor-overlay {
+      position: fixed; inset: 0; z-index: 100; background: var(--bg);
+      display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top);
     }
+    .tutor-overlay-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      background: var(--panel); flex-shrink: 0;
+    }
+    .tutor-context { flex: 1; min-width: 0; }
+    .tutor-context-front {
+      font-size: 14px; font-weight: 600; color: var(--fg);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tutor-context-answer {
+      font-size: 12px; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tutor-controls {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-bottom: 1px solid var(--border);
+      background: var(--panel); flex-shrink: 0;
+    }
+    .tutor-thread {
+      flex: 1; overflow-y: auto; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tutor-input {
+      display: flex; gap: 8px; align-items: flex-end;
+      padding: 8px 14px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border); background: var(--panel); flex-shrink: 0;
+    }
+    .tutor-input textarea { min-height: 0; resize: none; line-height: 1.4; flex: 1; }
+    .tutor-input button { white-space: nowrap; min-height: 40px; }
     .practice {
       margin-top: 12px; padding: 10px 14px; border-left: 3px solid var(--good);
       background: var(--panel2); border-radius: 8px; font-size: 15px;
@@ -124,14 +155,10 @@
       text-transform: uppercase; letter-spacing: .5px;
     }
     .li { margin: 3px 0 3px 4px; }
-    .tutor-ans h3, .tutor-ans h4, .answer h3, .answer h4 { margin: 12px 0 4px; font-size: 15px; color: #cdd6f4; }
+    .answer h3, .answer h4 { margin: 12px 0 4px; font-size: 15px; color: #cdd6f4; }
     .tutor-ans strong, .answer strong, .msg strong { color: #fff; }
 
-    /* Tutor chat thread: scrolls inside its own box so the page doesn't grow */
-    .chat-thread {
-      max-height: 58vh; overflow-y: auto; display: flex; flex-direction: column;
-      gap: 8px; padding: 4px 2px; margin-bottom: 8px;
-    }
+    /* Tutor chat message bubbles (used inside .tutor-overlay) */
     .msg {
       max-width: 96%; padding: 10px 14px; border-radius: 14px; font-size: 15px;
       line-height: 1.55; word-break: break-word;
@@ -140,9 +167,6 @@
     .msg-bot  { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
     .msg-bot .code-lang { margin-top: 6px; }
     .msg-user code.inline { background: rgba(255,255,255,.18); color: #fff; border-color: transparent; }
-    .chat-input { display: flex; gap: 8px; align-items: flex-end; }
-    .chat-input textarea { min-height: 0; resize: none; line-height: 1.4; }
-    .chat-input button { white-space: nowrap; min-height: 40px; }
     /* Markdown tables from tutor: horizontally scrollable */
     .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 10px 0; border-radius: 6px; border: 1px solid var(--border); }
     .md-table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
@@ -250,6 +274,6 @@
     }).catch(() => {});
   }
   </script>
-  <script type="module" src="app.js?v=17"></script>
+  <script type="module" src="app.js?v=19"></script>
 </body>
 </html>

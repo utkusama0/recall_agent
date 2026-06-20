@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "recall-pwa",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "3333", "."],
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3333"],
       "port": 3333
     }
   ]
