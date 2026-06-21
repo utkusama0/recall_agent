@@ -216,15 +216,15 @@
     "last_review": "2026-06-21T11:30:46.502Z"
   },
   "leetcode-missing-union-002": {
-    "due": "2026-06-21T09:40:16.559Z",
-    "stability": 0,
-    "difficulty": 0,
+    "due": "2026-06-21T11:58:02.180Z",
+    "stability": 1.18385,
+    "difficulty": 6.48830527,
     "elapsed_days": 0,
     "scheduled_days": 0,
     "learning_steps": 0,
-    "reps": 0,
+    "reps": 1,
     "lapses": 0,
-    "state": 0,
-    "last_review": null
+    "state": 1,
+    "last_review": "2026-06-21T11:53:02.180Z"
   }
 }
