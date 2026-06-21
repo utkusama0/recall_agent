@@ -202,5 +202,29 @@
     "lapses": 0,
     "state": 0,
     "last_review": null
+  },
+  "leetcode-missing-union-001": {
+    "due": "2026-06-21T09:40:16.559Z",
+    "stability": 0,
+    "difficulty": 0,
+    "elapsed_days": 0,
+    "scheduled_days": 0,
+    "learning_steps": 0,
+    "reps": 0,
+    "lapses": 0,
+    "state": 0,
+    "last_review": null
+  },
+  "leetcode-missing-union-002": {
+    "due": "2026-06-21T09:40:16.559Z",
+    "stability": 0,
+    "difficulty": 0,
+    "elapsed_days": 0,
+    "scheduled_days": 0,
+    "learning_steps": 0,
+    "reps": 0,
+    "lapses": 0,
+    "state": 0,
+    "last_review": null
   }
 }
