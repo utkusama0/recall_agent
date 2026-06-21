@@ -172,9 +172,9 @@
     .md-table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
     .md-table th { background: var(--panel2); color: var(--muted); font-weight: 600; font-size: 11px;
       text-transform: uppercase; letter-spacing: .4px; padding: 6px 10px; border: 1px solid var(--border);
-      white-space: nowrap; text-align: left; }
+      text-align: left; }
     .md-table td { background: var(--code); color: var(--fg); padding: 6px 10px; border: 1px solid var(--border);
-      white-space: nowrap; vertical-align: top; }
+      white-space: normal; word-break: break-word; vertical-align: top; }
     .md-table tr:nth-child(even) td { background: var(--panel); }
     details > summary { cursor: pointer; color: var(--accent); font-size: 14px; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
@@ -274,6 +274,6 @@
     }).catch(() => {});
   }
   </script>
-  <script type="module" src="app.js?v=20"></script>
+  <script type="module" src="app.js?v=21"></script>
 </body>
 </html>

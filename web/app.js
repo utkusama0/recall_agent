@@ -265,6 +265,13 @@ function gradeCard(id, rating) {
 
 // ---------- rendering (XSS-safe markdown + math) ----------
 const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const processCell = (c) => {
+  let cc = escapeHtml(c);
+  cc = cc.replace(/&lt;br\s*\/?\s*&gt;/gi, "<br>");
+  cc = cc.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  cc = cc.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  return cc;
+};
 
 function mdToHtml(text) {
   if (!text) return "";
@@ -278,7 +285,7 @@ function mdToHtml(text) {
     const i = blocks.length;
     const label = lang ? `<div class="code-lang">${escapeHtml(lang)}</div>` : "";
     blocks.push(`${label}<pre class="code"><code>${escapeHtml(code.replace(/\n$/, ""))}</code></pre>`);
-    return `B${i}`;
+    return `<!--B${i}-->`;
   });
 
   // 2. Protect inline code spans too.
@@ -286,7 +293,7 @@ function mdToHtml(text) {
   h = h.replace(/`([^`\n]+)`/g, (_, code) => {
     const i = inlines.length;
     inlines.push(`<code class="inline">${escapeHtml(code)}</code>`);
-    return `I${i}`;
+    return `<!--I${i}-->`;
   });
 
   // 3. Extract markdown tables (runs of lines starting with |) before escaping.
@@ -305,12 +312,12 @@ function mdToHtml(text) {
       const rows = buf.filter((_, idx) => idx !== si && idx !== si - 1);
       let t = `<div class="tbl-wrap"><table class="md-table">`;
       if (hdr)
-        t += `<thead><tr>` + parseCells(hdr).map((c) => `<th>${escapeHtml(c)}</th>`).join("") + `</tr></thead>`;
+        t += `<thead><tr>` + parseCells(hdr).map((c) => `<th>${processCell(c)}</th>`).join("") + `</tr></thead>`;
       t += "<tbody>";
-      for (const row of rows) t += `<tr>` + parseCells(row).map((c) => `<td>${escapeHtml(c)}</td>`).join("") + `</tr>`;
+      for (const row of rows) t += `<tr>` + parseCells(row).map((c) => `<td>${processCell(c)}</td>`).join("") + `</tr>`;
       t += "</tbody></table></div>";
       const ti = tables.length; tables.push(t);
-      out.push(`T${ti}`); buf = [];
+      out.push(`<!--T${ti}-->`); buf = [];
     };
     for (const line of tlines) {
       if (line.trimStart().startsWith("|")) buf.push(line);
@@ -331,7 +338,7 @@ function mdToHtml(text) {
     .replace(/\n/g, "<br>");
 
   // 5. Restore protected spans/blocks (tables first — they contain inline placeholders).
-  const phRe = (tag) => new RegExp("" + tag + "(\\d+)", "g");
+  const phRe = (tag) => new RegExp("&lt;!--" + tag + "(\\d+)--&gt;", "g");
   h = h.replace(phRe("T"), (_, i) => tables[Number(i)])
        .replace(phRe("B"), (_, i) => blocks[Number(i)])
        .replace(phRe("I"), (_, i) => inlines[Number(i)]);
