@@ -282,9 +282,11 @@ function mdToHtml(text) {
   // 1. Pull out fenced code blocks first so nothing else rewrites their contents.
   const blocks = [];
   let h = text.replace(/```[ \t]*([\w+-]*)\r?\n?([\s\S]*?)```/g, (_, lang, code) => {
+    if (!code.includes('\n') && code.includes('\\n'))
+      code = code.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
     const i = blocks.length;
     const label = lang ? `<div class="code-lang">${escapeHtml(lang)}</div>` : "";
-    blocks.push(`${label}<pre class="code"><code>${escapeHtml(code.replace(/\n$/, ""))}</code></pre>`);
+    blocks.push(`${label}<pre class="code"><code>${escapeHtml(code.replace(/^\n+|\n+$/g, ""))}</code></pre>`);
     return `<!--B${i}-->`;
   });
 
