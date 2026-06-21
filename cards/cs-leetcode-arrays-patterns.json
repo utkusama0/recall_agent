@@ -1,0 +1,67 @@
+{
+  "deck": "CS::LeetCode::Arrays::Patterns",
+  "domain": "cs",
+  "cards": [
+    {
+      "id": "leetcode-missing-union-001",
+      "front": "Find the Missing Number — given an array of size n-1 holding distinct integers in [1,n], find the one missing integer. What pattern does this trigger, what is the optimal algorithm, and what are the key traps?",
+      "answer": "Pattern trigger: range [1,n] with exactly one gap → mathematical invariant (sum or XOR).\n\nSIGNAL IN THE PROBLEM:\n• 'distinct integers in range [1,n]' → you know exactly what the full set should look like\n• 'one element missing' → the gap is measurable with math, no extra space needed\n\nAPPROACH PROGRESSION:\n\n① Naive — O(n²) time, O(1) space\nFor each number 1..n, linear-scan the array to check if it exists. Two nested loops.\n\n② Hashing — O(n) time, O(n) space\nInsert all elements into a set. Then check 1..n for the missing one.\nTrade: fast but uses O(n) extra space.\n\n③ Sum Formula (Optimal A) — O(n) time, O(1) space\nExpected sum of 1..n = n*(n+1)/2\nActual sum = sum of array elements\nMissing = expected − actual\n\n④ XOR (Optimal B) — O(n) time, O(1) space\nXOR all numbers 1..n together, then XOR every array element.\nEvery number that appears cancels itself (a XOR a = 0).\nThe survivor is the missing number.\n\nBEST CHOICE: Sum formula is simplest to write and explain in an interview. XOR is more elegant and avoids integer overflow risk on very large n.\n\nTRAPS:\n• Sum formula: n*(n+1)/2 can overflow a 32-bit int for large n — use 64-bit (long in Java/C++, not an issue in Python)\n• XOR: easy to forget to XOR both 1..n AND array values — missing either half gives wrong answer\n• Hashing approach: initialising max_consecutive = 1 style bugs — always start accumulators at the correct neutral value (0 for sum, 0 for XOR)\n• Edge case: single-element array [1] → missing is 2; [2] → missing is 1. Both approaches handle this correctly.",
+      "note": "Memory hook: 'The sum knows what should be there. Subtract what IS there. The difference is what's missing.' — like counting seats in a cinema vs. ticket stubs.\nXOR hook: identical numbers annihilate each other like matter and antimatter. The lone survivor is the missing one.",
+      "code": "# Approach 3 — Sum Formula: O(n) time, O(1) space\ndef missing_number_sum(arr):\n    n = len(arr) + 1          # array has n-1 elements, full range is [1,n]\n    expected = n * (n + 1) // 2\n    actual = sum(arr)\n    return expected - actual\n\n# Approach 4 — XOR: O(n) time, O(1) space\ndef missing_number_xor(arr):\n    n = len(arr) + 1\n    xor = 0\n    for i in range(1, n + 1):  # XOR all of 1..n\n        xor ^= i\n    for num in arr:             # XOR all array elements\n        xor ^= num\n    return xor                  # duplicates cancel, missing survives\n\n# Example\n# arr = [8, 2, 4, 5, 3, 7, 1], n=8\n# expected = 8*9//2 = 36\n# actual   = 8+2+4+5+3+7+1 = 30\n# missing  = 36 - 30 = 6  ✓",
+      "math": "$$\\text{missing} = \\frac{n(n+1)}{2} - \\sum_{i=0}^{n-2} arr[i]$$",
+      "ipa": null,
+      "example": "arr = [8,2,4,5,3,7,1] → expected sum = 36, actual sum = 30 → missing = 6",
+      "audio": null,
+      "application": "Checksum validation in data pipelines — detecting a dropped record in a sequence-numbered stream uses the same sum-invariant idea.",
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "GeeksForGeeks — Find the Missing Number (Apr 2025) + model knowledge",
+      "source_text": "Given an array arr[] of size n-1 with distinct integers in the range of [1, n]. This array represents a permutation of the integers from 1 to n with one element missing. Find the missing element in the array.",
+      "tags": [
+        "recall::mechanism",
+        "recall::complexity",
+        "recall::trace",
+        "recall::failure-mode",
+        "recall::code-pattern",
+        "diff::2",
+        "grounding::source",
+        "cs::arrays",
+        "cs::math-trick",
+        "cs::xor",
+        "cs::pattern::range-invariant"
+      ]
+    },
+    {
+      "id": "leetcode-missing-union-002",
+      "front": "Union of Two Sorted Arrays — given two sorted arrays arr1 (size n) and arr2 (size m), return their union in ascending order with no duplicates. What pattern does this trigger, what is the optimal algorithm, and what are the key traps?",
+      "answer": "Pattern trigger: TWO SORTED arrays + merge/combine task → Two Pointers (merge step of merge sort).\n\nSIGNAL IN THE PROBLEM:\n• 'two sorted arrays' → two-pointer pattern; never need to look backward\n• 'ascending order, no duplicates' → skip duplicates explicitly during the merge\n• O(1) space goal → cannot use a set; must build result in-place or stream it\n\nAPPROACH PROGRESSION:\n\n① Brute Force (Set) — O((n+m) log(n+m)) time, O(n+m) space\nInsert all elements from both arrays into a Python set (duplicates auto-removed).\nCall sorted() on the set to get ascending order.\nBottleneck: sorted() costs O(k log k) where k ≤ n+m. The set insertions are O(1) each but sorted() dominates.\nNote: Python set is a hash table — it is NOT sorted by default. sorted() is mandatory.\n\n② Two Pointers (Optimal) — O(n+m) time, O(n+m) space for output\nUse two pointers i (arr1) and j (arr2), both starting at 0.\nAt each step pick the smaller of arr1[i] and arr2[j], append to result, advance that pointer.\nIf equal, append once and advance BOTH pointers (handles duplicates across arrays).\nAlso skip consecutive duplicates within each array before comparing.\nWhen one array is exhausted, drain the remaining elements of the other (skipping its internal duplicates).\n\nINVARIANT: at every step, result contains all unique elements ≤ min(arr1[i], arr2[j]) in sorted order.\n\nTWO-POINTER STEP TABLE (arr1=[1,2,3,3,5], arr2=[2,4,5,6]):\ni=0 j=0 → pick 1 (arr1 smaller)           result=[1]\ni=1 j=0 → pick 2 (arr2 smaller… tie)       result=[1,2], advance both\ni=2 j=1 → pick 3 (arr1 smaller)           result=[1,2,3]\ni=3 j=1 → arr1[3]=3 == arr1[2]=3, skip duplicate in arr1\ni=4 j=1 → pick 4 (arr2 smaller)           result=[1,2,3,4]\ni=4 j=2 → tie on 5, append once, advance both  result=[1,2,3,4,5]\ndrain arr2: 6 → result=[1,2,3,4,5,6]\n\nTRAPS:\n• Python set looks sorted for small integers — it is NOT. Always call sorted() in the brute force.\n• Forgetting to skip duplicates WITHIN each array in the two-pointer approach (arr1 can have [3,3]).\n• Forgetting to drain the remaining array after one pointer hits the end.\n• Off-by-one when draining: use while i < n and while j < m, not <=.\n• Duplicate handling on tie: append the value ONCE, advance BOTH i and j — advancing only one causes the value to be appended again on the next iteration.",
+      "note": "Mental model: imagine two conveyor belts of sorted cards moving toward you. You always pick the smaller card from whichever belt is showing it. If both show the same card, take one and discard the other. When one belt runs out, scoop everything left on the other belt.\nC++ std::set IS always sorted (Red-Black Tree, O(log n) insert) — but Python set is NOT (hash table, O(1) insert, no order guarantee).",
+      "code": "# Brute Force — O((n+m)log(n+m)) time, O(n+m) space\ndef union_brute(arr1, arr2):\n    return sorted(set(arr1) | set(arr2))   # | is set union operator\n\n# Optimal Two Pointers — O(n+m) time, O(n+m) space\ndef union_two_pointers(arr1, arr2):\n    result = []\n    i, j = 0, 0\n    n, m = len(arr1), len(arr2)\n\n    while i < n and j < m:\n        # Skip duplicates within arr1\n        if i > 0 and arr1[i] == arr1[i - 1]:\n            i += 1\n            continue\n        # Skip duplicates within arr2\n        if j > 0 and arr2[j] == arr2[j - 1]:\n            j += 1\n            continue\n\n        if arr1[i] < arr2[j]:\n            result.append(arr1[i])\n            i += 1\n        elif arr1[i] > arr2[j]:\n            result.append(arr2[j])\n            j += 1\n        else:                        # equal — append once, advance both\n            result.append(arr1[i])\n            i += 1\n            j += 1\n\n    # Drain remaining elements\n    while i < n:\n        if i == 0 or arr1[i] != arr1[i - 1]:\n            result.append(arr1[i])\n        i += 1\n    while j < m:\n        if j == 0 or arr2[j] != arr2[j - 1]:\n            result.append(arr2[j])\n        j += 1\n\n    return result\n\n# arr1=[1,2,3,3,5], arr2=[2,4,5,6] → [1,2,3,4,5,6]",
+      "math": "$$\\text{Time: } O(n+m) \\quad \\text{Space: } O(n+m) \\text{ (output only, no auxiliary structure)}$$",
+      "ipa": null,
+      "example": "arr1=[1,2,3,3,5], arr2=[2,4,5,6] → union=[1,2,3,4,5,6]",
+      "audio": null,
+      "application": "Merge step in external merge sort — merging two sorted file chunks on disk uses the identical two-pointer pattern.",
+      "application_url": null,
+      "prompts": null,
+      "cloze": null,
+      "source": "Conversation context + model knowledge",
+      "source_text": null,
+      "tags": [
+        "recall::mechanism",
+        "recall::complexity",
+        "recall::trace",
+        "recall::failure-mode",
+        "recall::code-pattern",
+        "recall::distinction",
+        "diff::3",
+        "grounding::model",
+        "cs::arrays",
+        "cs::two-pointers",
+        "cs::sorting",
+        "cs::pattern::merge"
+      ]
+    }
+  ]
+}
