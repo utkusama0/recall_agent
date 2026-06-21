@@ -331,9 +331,11 @@ function mdToHtml(text) {
     .replace(/\n/g, "<br>");
 
   // 5. Restore protected spans/blocks.
-  h = h.replace(/ I(\d+) /g, (_, i) => inlines[Number(i)])
-       .replace(/ T(\d+) (<br>)?/g, (_, i) => tables[Number(i)])
-       .replace(/ B(\d+) (<br>)?/g, (_, i) => blocks[Number(i)]);
+  // Tables/blocks first — they may contain I{n} placeholders in their cells.
+  // Inline regex uses lookahead because parseCells trims trailing spaces.
+  h = h.replace(/ T(\d+) (<br>)?/g, (_, i) => tables[Number(i)])
+       .replace(/ B(\d+) (<br>)?/g, (_, i) => blocks[Number(i)])
+       .replace(/ I(\d+)(?= |<|$)/g, (_, i) => inlines[Number(i)]);
   return DOMPurify.sanitize(h);
 }
 function renderMath(el) {
