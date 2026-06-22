@@ -12,16 +12,16 @@
     "last_review": "2026-06-19T00:16:04.647Z"
   },
   "python-functions-001": {
-    "due": "2026-06-21T11:19:19.544Z",
-    "stability": 3.173,
-    "difficulty": 5.28243442,
-    "elapsed_days": 0,
-    "scheduled_days": 0,
+    "due": "2026-06-26T13:16:12.679Z",
+    "stability": 4.46685806,
+    "difficulty": 5.27296793,
+    "elapsed_days": 1,
+    "scheduled_days": 4,
     "learning_steps": 0,
-    "reps": 1,
+    "reps": 2,
     "lapses": 0,
-    "state": 1,
-    "last_review": "2026-06-21T11:09:19.544Z"
+    "state": 2,
+    "last_review": "2026-06-22T13:16:12.679Z"
   },
   "python-functions-002": {
     "due": "2026-06-20T17:53:22.136Z",
