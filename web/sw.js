@@ -1,10 +1,13 @@
 // RECALL service worker — caches the app shell + CDN libs for offline review.
 // Card/state data is NOT cached here (it lives in IndexedDB, written by app.js);
 // GitHub API and tutor calls always go to the network.
-const CACHE = "recall-v17";
-// Only pre-cache immutable CDN libs. Local files use network-first
-// and get cached on first successful fetch — no stale seeds.
+const CACHE = "recall-v18";
 const SHELL = [
+  "./",
+  "./index.html",
+  "./app.js",
+  "./icon.svg",
+  "./manifest.webmanifest",
   "https://cdn.jsdelivr.net/npm/ts-fsrs@4.7.0/+esm",
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
@@ -62,7 +65,10 @@ self.addEventListener("fetch", (e) => {
           caches.open(CACHE).then((c) => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => caches.match(e.request))
+      }).catch(() =>
+        caches.match(e.request)
+          .then((hit) => hit || caches.match(e.request, { ignoreSearch: true }))
+      )
     );
   } else {
     e.respondWith(
