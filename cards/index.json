@@ -1,6 +1,7 @@
 {
   "decks": [
     "cs-leetcode-arrays-patterns",
+    "cs-leetcode-hashmap-freq-array-construction",
     "cs-python-fred-baptiste-03-functions",
     "cs-python-fred-baptiste-05-break-continue-try"
   ]
